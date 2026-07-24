@@ -8,14 +8,25 @@
   --panel-muted: #9ca49f;
   --border: rgba(255, 255, 255, 0.12);
   --border-accent: rgba(255, 255, 255, 0.14);
+  --border-brand-hover: rgba(154, 167, 255, 0.32);
   --text: #f4f5f3;
   --muted: #969c98;
   --brand: #9aa7ff;
   --brand-text: #d7dbff;
   --brand-soft: rgba(154, 167, 255, 0.14);
   --official: #43c98b;
+  --official-soft: rgba(67, 201, 139, 0.1);
   --community: #d4a43e;
+  --community-soft: rgba(212, 164, 62, 0.1);
   --suspected: #df7448;
+  --suspected-soft: rgba(223, 116, 72, 0.1);
+  --action-bg: #f4f5f3;
+  --action-bg-hover: #dfe1df;
+  --action-fg: #0b0c0c;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --duration-fast: 0.15s;
+  --duration-card: 0.2s;
+  --tracking-display: -0.04em;
   --radius-control: 6px;
   --radius-panel: 8px;
   --radius-status: 999px;
@@ -85,9 +96,9 @@ a {
   height: 30px;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
-  background: #1a1c1b;
+  background: var(--surface-2);
   color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   font-size: 12px;
 }
@@ -101,25 +112,25 @@ a {
 .headerLink {
   color: var(--muted);
   font-size: 14px;
-  transition: color 0.15s;
+  transition: color var(--duration-fast);
 }
 .headerLink:hover {
   color: var(--text);
 }
 
 .headerLinkAccent {
-  color: #0b0c0c !important;
-  border: 1px solid #f4f5f3;
-  background: #f4f5f3;
+  color: var(--action-fg) !important;
+  border: 1px solid var(--action-bg);
+  background: var(--action-bg);
   padding: 6px 16px;
   border-radius: var(--radius-control);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  transition: background 0.15s;
+  transition: background var(--duration-fast);
 }
 .headerLinkAccent:hover {
-  background: #dfe1df;
+  background: var(--action-bg-hover);
 }
 
 /* ─── Live banner ─────────────────────────────────────────── */
@@ -133,15 +144,15 @@ a {
   font-size: 13.5px;
 }
 .liveBanner.official {
-  background: rgba(67, 201, 139, 0.1);
+  background: var(--official-soft);
   border-bottom-color: rgba(67, 201, 139, 0.22);
 }
 .liveBanner.community {
-  background: rgba(212, 164, 62, 0.1);
+  background: var(--community-soft);
   border-bottom-color: rgba(212, 164, 62, 0.22);
 }
 .liveBanner.suspected {
-  background: rgba(223, 116, 72, 0.1);
+  background: var(--suspected-soft);
   border-bottom-color: rgba(223, 116, 72, 0.22);
 }
 .liveBannerDot {
@@ -209,11 +220,11 @@ a {
   border-radius: 20px;
   background: rgba(246, 247, 245, 0.94);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.34);
-  color: #111312;
+  color: var(--panel);
 }
 
 .quotaSignalPrompt {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 22px;
   font-weight: 700;
   line-height: 1;
@@ -262,7 +273,7 @@ h1 {
   font-size: clamp(52px, 7vw, 88px);
   font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: var(--tracking-display);
 }
 
 .heroCopy {
@@ -281,15 +292,15 @@ h1 {
   margin-top: 38px;
   padding: 14px 24px;
   border-radius: var(--radius-status);
-  background: #f4f5f3;
-  color: #0b0c0c;
+  background: var(--action-bg);
+  color: var(--action-fg);
   font-size: 15px;
   font-weight: 600;
-  transition: transform 0.15s, background 0.15s;
+  transition: transform var(--duration-fast), background var(--duration-fast);
 }
 
 .heroAction:hover {
-  background: #dfe1df;
+  background: var(--action-bg-hover);
   transform: translateY(-1px);
 }
 
@@ -301,7 +312,7 @@ h1 {
   grid-template-columns: auto auto auto;
   gap: 3px 14px;
   color: rgba(255, 255, 255, 0.84);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.4;
   text-align: left;
@@ -324,17 +335,21 @@ h1 {
   grid-template-columns: 1.3fr 0.7fr;
   gap: 56px;
   background: var(--panel);
-  color: #f4f6f4;
+  color: var(--text);
   border: 1px solid var(--border-accent);
   border-radius: var(--radius-panel);
   box-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
+  transition: border-color var(--duration-card);
+}
+.latestCard:hover {
+  border-color: var(--border-brand-hover);
 }
 
 h2 {
   margin: 10px 0 16px;
   font-size: clamp(28px, 4vw, 42px);
   font-weight: 700;
-  letter-spacing: -0.04em;
+  letter-spacing: var(--tracking-display);
 }
 
 .latestDescription,
@@ -360,12 +375,16 @@ h2 {
   color: var(--brand);
   font-weight: 600;
 }
-.metaLabel {
-  color: var(--panel-muted);
+
+.metaLabel,
+.statLabel {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 600;
+}
+.metaLabel {
+  color: var(--panel-muted);
 }
 
 /* ─── Badges ──────────────────────────────────────────────── */
@@ -379,20 +398,20 @@ h2 {
 }
 .badge.official {
   color: var(--official);
-  background: rgba(67, 201, 139, 0.1);
+  background: var(--official-soft);
 }
 .badge.community {
   color: var(--community);
-  background: rgba(212, 164, 62, 0.1);
+  background: var(--community-soft);
 }
 .badge.suspected {
   color: var(--suspected);
-  background: rgba(223, 116, 72, 0.1);
+  background: var(--suspected-soft);
 }
 
 /* ─── Stats ───────────────────────────────────────────────── */
 .statsSection {
-  padding: 88px 0 0;
+  padding: 88px 0 80px;
 }
 
 .statsGrid {
@@ -410,18 +429,18 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: border-color var(--duration-card);
+}
+.statTile:hover {
+  border-color: var(--border-brand-hover);
 }
 .statLabel {
   color: var(--muted);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 600;
 }
 .statValue {
   font-size: 38px;
   font-weight: 700;
-  letter-spacing: -0.04em;
+  letter-spacing: var(--tracking-display);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -454,14 +473,14 @@ h2 {
   position: relative;
   margin-bottom: 16px;
   padding: 28px 32px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   background: var(--panel);
-  color: #f4f6f4;
+  color: var(--text);
   border-radius: var(--radius-panel);
-  transition: border-color 0.2s;
+  transition: border-color var(--duration-card);
 }
 .eventCard:hover {
-  border-color: rgba(154, 167, 255, 0.32);
+  border-color: var(--border-brand-hover);
 }
 
 .timelineDot {
@@ -573,7 +592,7 @@ time,
   font-size: 14px;
   padding: 10px 14px;
   width: 100%;
-  transition: border-color 0.15s;
+  transition: border-color var(--duration-fast);
   outline: none;
 }
 .formRow input:focus,
@@ -615,8 +634,8 @@ time,
 .submitBtn {
   width: fit-content;
   padding: 11px 26px;
-  background: #f4f5f3;
-  color: #0b0c0c;
+  background: var(--action-bg);
+  color: var(--action-fg);
   font-family: inherit;
   font-weight: 700;
   font-size: 14px;
@@ -624,9 +643,7 @@ time,
   border: none;
   border-radius: var(--radius-control);
   cursor: pointer;
-  transition:
-    opacity 0.15s,
-    transform 0.1s;
+  transition: opacity var(--duration-fast), transform 0.1s;
 }
 .submitBtn:hover:not(:disabled) {
   opacity: 0.86;
@@ -668,9 +685,13 @@ time,
   margin-bottom: 96px;
   padding: 48px;
   background: var(--panel);
-  color: #f4f6f4;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: var(--radius-panel);
+  transition: border-color var(--duration-card);
+}
+.methodology:hover {
+  border-color: var(--border-brand-hover);
 }
 
 .methodGrid {
