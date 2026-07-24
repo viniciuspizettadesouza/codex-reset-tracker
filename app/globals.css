@@ -162,15 +162,12 @@ a {
   border-radius: 50%;
 }
 .liveBannerDot.official {
-  background: var(--official);
   box-shadow: 0 0 0 3px rgba(67, 201, 139, 0.2);
 }
 .liveBannerDot.community {
-  background: var(--community);
   box-shadow: 0 0 0 3px rgba(212, 164, 62, 0.2);
 }
 .liveBannerDot.suspected {
-  background: var(--suspected);
   box-shadow: 0 0 0 3px rgba(223, 116, 72, 0.2);
 }
 .liveBanner span {
@@ -339,10 +336,6 @@ h1 {
   border: 1px solid var(--border-accent);
   border-radius: var(--radius-panel);
   box-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
-  transition: border-color var(--duration-card);
-}
-.latestCard:hover {
-  border-color: var(--border-brand-hover);
 }
 
 h2 {
@@ -429,10 +422,6 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: border-color var(--duration-card);
-}
-.statTile:hover {
-  border-color: var(--border-brand-hover);
 }
 .statLabel {
   color: var(--muted);
@@ -442,11 +431,11 @@ h2 {
   font-weight: 700;
   letter-spacing: var(--tracking-display);
   line-height: 1;
-  font-variant-numeric: tabular-nums;
 }
 
 /* ─── History / Timeline ──────────────────────────────────── */
-.historySection {
+.historySection,
+.reportSection {
   padding: 80px 0;
 }
 
@@ -477,10 +466,22 @@ h2 {
   background: var(--panel);
   color: var(--text);
   border-radius: var(--radius-panel);
-  transition: border-color var(--duration-card);
 }
-.eventCard:hover {
-  border-color: var(--border-brand-hover);
+
+.timelineDot.official,
+.legend.official,
+.liveBannerDot.official {
+  background: var(--official);
+}
+.timelineDot.community,
+.legend.community,
+.liveBannerDot.community {
+  background: var(--community);
+}
+.timelineDot.suspected,
+.legend.suspected,
+.liveBannerDot.suspected {
+  background: var(--suspected);
 }
 
 .timelineDot {
@@ -492,18 +493,6 @@ h2 {
   border-radius: 50%;
   border: 3px solid var(--bg);
 }
-.timelineDot.official,
-.legend.official {
-  background: var(--official);
-}
-.timelineDot.community,
-.legend.community {
-  background: var(--community);
-}
-.timelineDot.suspected,
-.legend.suspected {
-  background: var(--suspected);
-}
 
 .eventTopline,
 .eventFooter {
@@ -513,10 +502,15 @@ h2 {
   align-items: center;
 }
 time,
+.eventFooter,
+.statValue,
+.footerUpdated {
+  font-variant-numeric: tabular-nums;
+}
+time,
 .eventFooter {
   color: var(--panel-muted);
   font-size: 13px;
-  font-variant-numeric: tabular-nums;
 }
 .eventCard h3 {
   margin: 16px 0 8px;
@@ -549,10 +543,6 @@ time,
 }
 
 /* ─── Report section ──────────────────────────────────────── */
-.reportSection {
-  padding: 80px 0;
-}
-
 .reportForm {
   display: grid;
   gap: 22px;
@@ -688,10 +678,6 @@ time,
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--radius-panel);
-  transition: border-color var(--duration-card);
-}
-.methodology:hover {
-  border-color: var(--border-brand-hover);
 }
 
 .methodGrid {
@@ -731,10 +717,23 @@ time,
 }
 .footerUpdated {
   color: var(--brand);
-  font-variant-numeric: tabular-nums;
 }
 code {
   color: var(--brand);
+}
+
+/* ─── Shared card hover ───────────────────────────────────── */
+.latestCard,
+.statTile,
+.eventCard,
+.methodology {
+  transition: border-color var(--duration-card);
+}
+.latestCard:hover,
+.statTile:hover,
+.eventCard:hover,
+.methodology:hover {
+  border-color: var(--border-brand-hover);
 }
 
 /* ─── Responsive ──────────────────────────────────────────── */
