@@ -95,8 +95,7 @@ reset happened or to catch resets on accounts we don't monitor:
 
 What does **not** exist anywhere today: a reset changelog, a per-account reset
 history, an in-app "your quota was reset" notification, or a page listing all
-extraordinary resets. Reference links are collected in
-[docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
+extraordinary resets. Reference links are collected in [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## Where the community tracker fits
 
@@ -110,9 +109,10 @@ delivers something useful with a single account on day one.
 
 - **One account, one machine.** The monitor needs valid Codex credentials on the
   host it runs on; it cannot see accounts it isn't logged into.
-- **Token expiry.** `auth.json`'s access token is refreshed by the Codex CLI. If
-  the token expires and the CLI hasn't refreshed it, the monitor reports a clear
-  401 and asks you to re-authenticate. Automatic refresh is a later step.
+- **Token expiry.** `auth.json`'s access token expires periodically. The monitor
+  attempts an automatic refresh using the `refresh_token` from `auth.json` before
+  giving up; if refresh fails, it reports a clear error and asks you to run
+  `codex login`.
 - **Official resets exist.** OpenAI shipped a savable rate-limit reset feature
   (`/wham/rate-limit-reset-credits`) on 2026-06-12. Some "early renewals" people
   report may be these user-triggered resets rather than spontaneous ones — the

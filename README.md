@@ -1,7 +1,7 @@
 # Codex Reset Tracker
 
 Know the moment your Codex weekly quota resets — especially when it resets **early**.
-See [VISION.md](VISION.md) for the goal, [NEXT_STEPS.md](NEXT_STEPS.md) to continue
+See [docs/VISION.md](docs/VISION.md) for the goal, [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) to continue
 the project, and [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for the data sources.
 
 ## ▶️ Start here: run the monitor
@@ -15,7 +15,7 @@ node scripts/monitor.mjs          # one poll: detect a reset and alert you
 
 Details and unattended scheduling are under
 [Personal quota monitor](#personal-quota-monitor) below; the full plan is in
-[NEXT_STEPS.md](NEXT_STEPS.md).
+[docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
 
 ## Run the website locally
 
@@ -30,7 +30,7 @@ Open `http://localhost:3000`.
 
 `scripts/monitor.mjs` watches your own Codex account and alerts you when the
 weekly quota refills — flagging whether it reset early. Run it on the machine
-where you're logged into the Codex CLI. See [VISION.md](VISION.md) for the why.
+where you're logged into the Codex CLI. See [docs/VISION.md](docs/VISION.md) for the why.
 
 ```bash
 # 1. First, capture the exact usage payload shape (also confirms auth works):
@@ -46,7 +46,8 @@ node scripts/monitor.mjs --watch --interval 900
 Configuration via environment variables (all optional):
 
 - `CODEX_HOME` — where `auth.json` lives (default `~/.codex`). Or pass `--auth <path>`.
-- `CODEX_WEBHOOK_URL` — POST alerts to a Discord / Slack / ntfy / Telegram-bot webhook.
+- `CODEX_WEBHOOK_URL` — POST alerts to a Discord / Slack / Telegram-bot / ntfy webhook. The platform is auto-detected from the URL.
+- `CODEX_TELEGRAM_CHAT_ID` — required when `CODEX_WEBHOOK_URL` points to a Telegram bot API URL.
 - `CODEX_MONITOR_STATE` — where snapshots are stored (default `~/.codex-reset-tracker/monitor-state.json`).
 - `CODEX_PLAN` — your plan (Plus / Pro / Team …), used when emitting events.
 
@@ -58,6 +59,7 @@ Flags:
 - `--all-windows` — also alert on the 5-hour window (off by default; it resets
   normally and would be noisy).
 - `--fixture <path>` — read usage from a file instead of the network (offline, no auth).
+- `--test-alert` — fire a test notification and exit (no auth needed; useful for verifying webhooks).
 
 On macOS, alerts also fire as native desktop notifications. To run unattended,
 schedule the single-poll form with cron or launchd, or leave `--watch` running on

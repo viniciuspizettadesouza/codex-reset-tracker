@@ -71,13 +71,64 @@ function readAuth() {
   const accessToken = t.access_token ?? raw.access_token;
   const accountId =
     t.account_id ?? raw.account_id ?? t.accountId ?? raw.accountId;
+  const refreshToken = raw.tokens?.refresh_token ?? raw.refresh_token ?? null;
   if (!accessToken) {
     throw new Error(`No access_token found in ${AUTH_PATH}.`);
   }
-  return { accessToken, accountId };
+  return { accessToken, accountId, refreshToken };
 }
 
-async function fetchUsage({ accessToken, accountId }) {
+async function refreshAccessToken(refreshToken) {
+  const body = JSON.stringify({
+    grant_type: "refresh_token",
+    refresh_token: refreshToken,
+    // Public client ID used by the Codex CLI.
+    client_id: "pdlLIX2Y72MIl2rhLhTE9VV9bN905kBh",
+  });
+  const headers = { "Content-Type": "application/json" };
+
+  let res = await fetch("https://auth.openai.com/oauth/token", {
+    method: "POST",
+    headers,
+    body,
+  });
+  if (!res.ok) {
+    // Fall back to the Auth0 domain used by older CLI versions.
+    res = await fetch("https://auth0.openai.com/oauth/token", {
+      method: "POST",
+      headers,
+      body,
+    });
+  }
+  if (!res.ok) {
+    throw new Error(
+      `Token refresh failed (HTTP ${res.status}). Run \`codex login\` to re-authenticate.`,
+    );
+  }
+  const data = await res.json();
+  const newToken = data.access_token;
+  if (!newToken) {
+    throw new Error(
+      `Token refresh response did not include an access_token. Run \`codex login\` to re-authenticate.`,
+    );
+  }
+  // Merge the new token back into the existing auth.json, preserving all other fields.
+  let existing = {};
+  try {
+    existing = JSON.parse(readFileSync(AUTH_PATH, "utf-8"));
+  } catch {
+    // If we cannot read the file, write a minimal replacement.
+  }
+  if (existing.tokens) {
+    existing.tokens.access_token = newToken;
+  } else {
+    existing.access_token = newToken;
+  }
+  writeFileSync(AUTH_PATH, JSON.stringify(existing, null, 2) + "\n", "utf-8");
+  return newToken;
+}
+
+async function fetchUsage({ accessToken, accountId, refreshToken }, { onRefreshed } = {}) {
   const headers = {
     Authorization: `Bearer ${accessToken}`,
     "User-Agent": "codex-reset-tracker-monitor/1.0",
@@ -85,10 +136,22 @@ async function fetchUsage({ accessToken, accountId }) {
   };
   if (accountId) headers["ChatGPT-Account-Id"] = accountId;
 
-  const res = await fetch(USAGE_URL, { headers });
-  if (res.status === 401 || res.status === 403) {
+  let res = await fetch(USAGE_URL, { headers });
+  if (res.status === 401 && refreshToken) {
+    // Attempt a silent token refresh, then retry once.
+    const newToken = await refreshAccessToken(refreshToken);
+    headers.Authorization = `Bearer ${newToken}`;
+    res = await fetch(USAGE_URL, { headers });
+    if (onRefreshed) onRefreshed(newToken);
+  }
+  if (res.status === 401) {
     throw new Error(
-      `Usage endpoint returned ${res.status} — the access token is likely expired. Run \`codex\` (or \`codex login\`) on this machine to refresh auth.json, then retry.`,
+      `Usage endpoint returned 401 — the access token is expired and could not be refreshed automatically. Run \`codex login\` to re-authenticate.`,
+    );
+  }
+  if (res.status === 403) {
+    throw new Error(
+      `Usage endpoint returned 403 — this account does not have access to the usage endpoint. Run \`codex\` (or \`codex login\`) on this machine to refresh auth.json, then retry.`,
     );
   }
   if (!res.ok) {
@@ -97,11 +160,11 @@ async function fetchUsage({ accessToken, accountId }) {
   return res.json();
 }
 
-async function getUsage(auth) {
+async function getUsage(auth, opts = {}) {
   if (FIXTURE_PATH) {
     return JSON.parse(readFileSync(FIXTURE_PATH, "utf-8"));
   }
-  return fetchUsage(auth);
+  return fetchUsage(auth, opts);
 }
 
 // Append a detected reset to the community tracker, merging via upsertEvent so a
@@ -159,14 +222,47 @@ function notifyMac(title, message) {
   ]);
 }
 
-async function notifyWebhook(text) {
+async function notifyWebhook(title, message) {
   if (!WEBHOOK_URL) return;
+  const text = `${title}\n${message}`;
+  let payload;
+
+  if (
+    WEBHOOK_URL.includes("discord.com/api/webhooks") ||
+    WEBHOOK_URL.includes("discordapp.com")
+  ) {
+    payload = { embeds: [{ title, description: message, color: 0x55e6a5 }] };
+  } else if (
+    WEBHOOK_URL.includes("hooks.slack.com") ||
+    WEBHOOK_URL.includes("/slack")
+  ) {
+    payload = {
+      blocks: [
+        {
+          type: "section",
+          text: { type: "mrkdwn", text: `*${title}*\n${message}` },
+        },
+      ],
+    };
+  } else if (WEBHOOK_URL.includes("api.telegram.org/bot")) {
+    const chatId = process.env.CODEX_TELEGRAM_CHAT_ID;
+    if (!chatId) {
+      console.warn(
+        "Telegram webhook configured but CODEX_TELEGRAM_CHAT_ID is not set — skipping notification.",
+      );
+      return;
+    }
+    payload = { chat_id: chatId, text, parse_mode: "HTML" };
+  } else {
+    // Generic fallback compatible with ntfy, Mattermost, and similar consumers.
+    payload = { content: text, text };
+  }
+
   try {
     await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // `content`=Discord, `text`=Slack/Mattermost/ntfy — send both for portability.
-      body: JSON.stringify({ content: text, text }),
+      body: JSON.stringify(payload),
     });
   } catch (err) {
     console.warn("Webhook notification failed:", err.message);
@@ -176,7 +272,7 @@ async function notifyWebhook(text) {
 async function alert(title, message) {
   console.log(`\n🔔 ${title}\n${message}\n`);
   notifyMac(title, message);
-  await notifyWebhook(`${title}\n${message}`);
+  await notifyWebhook(title, message);
 }
 
 async function handleEvent(ev) {
@@ -204,8 +300,8 @@ async function handleEvent(ev) {
   }
 }
 
-async function pollOnce(auth) {
-  const raw = await getUsage(auth);
+async function pollOnce(auth, opts = {}) {
+  const raw = await getUsage(auth, opts);
   if (flag("--raw")) {
     console.log(JSON.stringify(raw, null, 2));
     return;
@@ -231,9 +327,10 @@ async function pollOnce(auth) {
 
   if (events.length === 0) {
     const wk = windows.weekly;
-    console.log(
-      `Polled OK. ${wk ? `Weekly: ${wk.usedPercent}% used, resets ${wk.resetsAt}.` : "No weekly window in payload."} No reset detected.`,
-    );
+    const wkInfo = wk
+      ? `Weekly: ${wk.usedPercent}% used, resets ${wk.resetsAt}.`
+      : "No weekly window in payload.";
+    console.log(`Polled OK. ${wkInfo} No reset detected.`);
   }
 
   state.windows = windows;
@@ -242,22 +339,41 @@ async function pollOnce(auth) {
 }
 
 async function main() {
+  if (flag("--test-alert")) {
+    await alert(
+      "Test alert",
+      "Monitor alert test — if you see this, notifications are working.",
+    );
+    return;
+  }
+
   // Fixture mode reads usage from a file, so no credentials are needed.
   const auth = FIXTURE_PATH ? null : readAuth();
+
+  // When a live token refresh succeeds, update the in-memory auth object so
+  // subsequent polls in --watch mode use the new token without re-reading disk.
+  const opts = auth
+    ? {
+        onRefreshed(newToken) {
+          auth.accessToken = newToken;
+          console.log("Access token refreshed automatically.");
+        },
+      }
+    : {};
 
   if (flag("--watch")) {
     console.log(`Watching every ${INTERVAL_SEC}s. State: ${STATE_PATH}`);
     // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
-        await pollOnce(auth);
+        await pollOnce(auth, opts);
       } catch (err) {
         console.error("Poll failed:", err.message);
       }
       await new Promise((r) => setTimeout(r, INTERVAL_SEC * 1000));
     }
   } else {
-    await pollOnce(auth);
+    await pollOnce(auth, opts);
   }
 }
 

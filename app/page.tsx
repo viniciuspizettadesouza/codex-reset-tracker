@@ -51,11 +51,42 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   timeZoneName: "short",
 });
 
+function hoursAgo(isoDate: string): number {
+  return (Date.now() - new Date(isoDate).getTime()) / 3_600_000;
+}
+
 export default function Home() {
   const events = [...resetEvents].sort(
     (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
   );
   const latest = events[0];
+  const latestHoursAgo = hoursAgo(latest.occurredAt);
+  const showBanner = latestHoursAgo <= 24;
+
+  // Stats
+  const daysEarlyValues = events
+    .map((e) => e.daysEarly)
+    .filter((d): d is number => typeof d === "number");
+  const avgDaysEarly =
+    daysEarlyValues.length > 0
+      ? (daysEarlyValues.reduce((a, b) => a + b, 0) / daysEarlyValues.length).toFixed(1)
+      : null;
+
+  const planCounts: Record<string, number> = {};
+  for (const event of events) {
+    for (const plan of event.affectedPlans) {
+      planCounts[plan] = (planCounts[plan] ?? 0) + 1;
+    }
+  }
+  const sortedPlans = Object.entries(planCounts).sort((a, b) => b[1] - a[1]);
+  const mostAffectedPlan =
+    sortedPlans.length === 0 ||
+    (sortedPlans.length > 1 && sortedPlans[0][1] === sortedPlans[1][1])
+      ? "—"
+      : sortedPlans[0][0];
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const recentCount = events.filter((e) => new Date(e.occurredAt) >= thirtyDaysAgo).length;
 
   return (
     <main>
@@ -69,6 +100,17 @@ export default function Home() {
           <a className="headerLink headerLinkAccent" href="#report">Report a reset</a>
         </nav>
       </header>
+
+      {showBanner && (
+        <div className="liveBanner" role="alert">
+          <span className={`liveBannerDot ${latest.status}`} aria-hidden="true" />
+          <span>
+            <strong>Reset detected {Math.round(latestHoursAgo)}h ago</strong>
+            {" — "}{latest.title}
+          </span>
+          <a className="liveBannerLink" href="#history">View details</a>
+        </div>
+      )}
 
       <section className="hero shell" id="top">
         <div className="eyebrow"><span className="pulse" /> Community quota monitor</div>
@@ -114,6 +156,28 @@ export default function Home() {
                 <strong>{latest.sourceName}</strong>
               )}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="shell statsSection" id="stats">
+        <p className="label">At a glance</p>
+        <div className="statsGrid">
+          <div className="statTile">
+            <span className="statLabel">Total events</span>
+            <span className="statValue">{events.length}</span>
+          </div>
+          <div className="statTile">
+            <span className="statLabel">Avg days early</span>
+            <span className="statValue">{avgDaysEarly ?? "—"}</span>
+          </div>
+          <div className="statTile">
+            <span className="statLabel">Most affected plan</span>
+            <span className="statValue">{mostAffectedPlan}</span>
+          </div>
+          <div className="statTile">
+            <span className="statLabel">Resets in last 30 days</span>
+            <span className="statValue">{recentCount}</span>
           </div>
         </div>
       </section>
@@ -179,6 +243,7 @@ export default function Home() {
 
       <footer className="shell footer">
         <p>Independent community project. Not affiliated with OpenAI.</p>
+        <p>Feeds: <a href="/api/feed">JSON</a> · <a href="/api/feed/rss">RSS</a></p>
         <p className="footerUpdated">Updated {dateFormatter.format(new Date(lastUpdatedAt))}</p>
       </footer>
     </main>

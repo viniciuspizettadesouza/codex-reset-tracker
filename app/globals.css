@@ -27,6 +27,14 @@ a { color: inherit; }
 .brandMark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--green); color: #052116; font-weight: 900; }
 .headerLink { color: var(--muted); text-decoration: none; font-size: 14px; }
 .headerLink:hover { color: var(--text); }
+.liveBanner { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: rgba(85,230,165,.1); border-bottom: 1px solid rgba(85,230,165,.25); font-size: 14px; }
+.liveBannerDot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; }
+.liveBannerDot.official { background: var(--green); box-shadow: 0 0 0 4px rgba(85,230,165,.2); }
+.liveBannerDot.community { background: var(--yellow); box-shadow: 0 0 0 4px rgba(243,201,107,.2); }
+.liveBannerDot.suspected { background: var(--orange); box-shadow: 0 0 0 4px rgba(242,152,93,.2); }
+.liveBanner span { flex: 1; }
+.liveBannerLink { color: var(--green); text-decoration: none; font-weight: 700; white-space: nowrap; }
+.liveBannerLink:hover { text-decoration: underline; }
 .hero { padding: 98px 0 60px; }
 .eyebrow, .label { color: var(--green); font-size: 12px; text-transform: uppercase; letter-spacing: .13em; font-weight: 800; }
 .eyebrow { display: flex; align-items: center; gap: 9px; }
@@ -58,6 +66,14 @@ time, .eventFooter { color: var(--muted); font-size: 13px; }
 .eventCard h3 { margin: 18px 0 8px; font-size: 24px; }
 .eventFooter { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
 .eventFooter a { color: var(--green); text-decoration: none; }
+.daysEarly { color: var(--green); background: rgba(85,230,165,.12); padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+/* Stats section */
+.statsSection { padding: 56px 0 0; }
+.statsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }
+.statTile { background: var(--surface-2); border: 1px solid var(--line); border-radius: 16px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; }
+.statLabel { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
+.statValue { font-size: 36px; font-weight: 800; letter-spacing: -.03em; color: var(--text); line-height: 1; }
+
 .methodology { display: grid; grid-template-columns: .7fr 1.3fr; gap: 60px; margin-top: 45px; margin-bottom: 80px; padding: 46px; background: var(--surface-2); border-radius: 24px; }
 .methodGrid { display: grid; gap: 22px; }
 .methodGrid > div { display: grid; grid-template-columns: 14px 1fr; column-gap: 12px; align-items: center; }
@@ -111,6 +127,7 @@ code { color: var(--green); }
   .latestCard, .methodology { grid-template-columns: 1fr; gap: 30px; padding: 24px; }
   .latestMeta { grid-template-columns: 1fr; }
   .sectionHeading, .eventTopline, .eventFooter, .footer { align-items: flex-start; flex-direction: column; }
+  .statsGrid { grid-template-columns: 1fr 1fr; }
   .headerNav { gap: 12px; }
   .headerLinkAccent { padding: 5px 10px; }
   .timeline { padding-left: 25px; }

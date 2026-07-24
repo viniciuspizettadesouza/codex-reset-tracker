@@ -2,7 +2,7 @@
 
 Reference material for finding and corroborating early Codex quota resets. The
 authoritative signal is the personal monitor reading `/wham/usage` (see
-[../VISION.md](../VISION.md)); the sources below are secondary / corroboration.
+[VISION.md](VISION.md)); the sources below are secondary / corroboration.
 
 ## First-party (authoritative)
 

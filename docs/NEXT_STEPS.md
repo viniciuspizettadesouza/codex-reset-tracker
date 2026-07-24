@@ -3,7 +3,7 @@
 Continuation notes so this project can be resumed in a fresh session without
 re-deriving context. Goal: **tell the user the moment their Codex weekly quota
 resets, especially when it resets early.** See [VISION.md](VISION.md) for the why
-and [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for the source landscape.
+and [DATA_SOURCES.md](DATA_SOURCES.md) for the source landscape.
 
 ## ▶️ Immediate next action (do this first)
 
@@ -29,15 +29,16 @@ node scripts/monitor.mjs --watch --interval 900   # keep watching every 15 min
 
 To run unattended, schedule the one-shot form with cron/launchd, or leave the
 `--watch` form running on an always-on host. Full options are in the
-[README](README.md#personal-quota-monitor).
+[README](../README.md#personal-quota-monitor).
 
 ## Current state (what works)
 
 - **`scripts/monitor.mjs`** — reads `~/.codex/auth.json`, GETs `/wham/usage`,
   detects resets, alerts (console + `CODEX_WEBHOOK_URL` + macOS notification).
   Suppresses the noisy 5h window by default (`--all-windows` to include it).
-  Supports `--fixture <path>` (offline, no auth) and `--emit-event` (writes to the
-  tracker via `upsertEvent`).
+  Supports `--fixture <path>` (offline, no auth), `--emit-event` (writes to the
+  tracker via `upsertEvent`), and `--test-alert` (fires a test notification and
+  exits — useful for verifying webhooks without waiting for a real reset).
 - **`scripts/lib/quota.mjs`** — pure detection logic; unit-verified for early
   refill, jitter (ignored), and reset-time-moved-earlier heads-up.
 - **`scripts/lib/events.mjs`** — shared `upsertEvent` merge; independent reports
@@ -48,27 +49,36 @@ To run unattended, schedule the one-shot form with cron/launchd, or leave the
   non-early resets (require `occurredAt < scheduledAt`).
 - **`scripts/fixtures/`** + **`test/`** — best-guess usage fixtures and a `npm test`
   suite (15 tests) covering the detection + merge logic.
-- **Website** (`app/`) — timeline of events with confidence + "days early".
+- **Website** (`app/`) — timeline of events with confidence + "days early" chip,
+  stats row (total events, avg days early, most-affected plan, resets in 30 days),
+  JSON/RSS feed endpoints at `/api/feed` and `/api/feed/rss`, live 24h banner
+  (color-coded by confidence, links to #history), and a custom favicon.
 
 ## Backlog (in priority order)
 
 1. **Lock the `/wham/usage` parser** to real field names (needs the `--raw` output).
    Replace the best-guess fixtures in `scripts/fixtures/` with a real snapshot.
-2. **Token refresh** — on 401 the monitor currently tells you to re-login. Add
-   automatic refresh using `refresh_token` from `auth.json` (OpenAI OAuth token
-   endpoint) so an unattended monitor survives token expiry.
-3. **Alert channel** — pick the real one (Telegram bot / Discord / email). Generic
-   webhook (`CODEX_WEBHOOK_URL`) already covers Discord/Slack/ntfy/Telegram-bot.
-4. **Website analytics** (VISION #3) — stats row (total events, avg days early,
-   most-affected plan, frequency) + live banner + RSS/JSON feed; style the
-   `.daysEarly` span (currently unstyled).
-5. **X/@thsottiaux ingestion** — hard to automate (API/auth); keep as a manual
+2. **X/@thsottiaux ingestion** — hard to automate (API/auth); keep as a manual
    watch source unless a feasible feed is found.
 
 ### Done
 
 - Feed detected resets into the tracker — `monitor.mjs --emit-event`.
 - Offline testing — `--fixture` mode + `npm test`.
+- **Token refresh** — on 401 the monitor automatically refreshes using
+  `refresh_token` from `auth.json` (OpenAI OAuth token endpoint), writes the new
+  token back to disk, and retries. Falls back to `auth0.openai.com` for older CLI
+  versions.
+- **Alert channel improvements** — `notifyWebhook` now sends platform-native
+  payloads: Discord embeds, Slack blocks, Telegram native (requires
+  `CODEX_TELEGRAM_CHAT_ID`), or generic fallback. `--test-alert` flag for quick
+  verification.
+- **Website analytics** — stats row (4 tiles), `.daysEarly` styled as a green chip,
+  JSON feed at `/api/feed`, RSS 2.0 feed at `/api/feed/rss`, footer feed links.
+- **Website live banner** — full-width banner below the header when the most recent
+  event is within 24h; color-coded by confidence, links to #history.
+- **Favicon** — `app/icon.svg` using the "C" brand mark (green rounded square),
+  replaces the browser-cached dinosaur from a previous Docusaurus site.
 
 ## Gotchas
 
