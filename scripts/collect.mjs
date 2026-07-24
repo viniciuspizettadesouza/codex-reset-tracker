@@ -13,7 +13,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { upsertEvent, deriveStatus } from "./lib/events.mjs";
+import { upsertEvent } from "./lib/events.mjs";
+import { parseRssItems, clusterByWindow, buildEvent } from "./lib/collect-utils.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_PATH = join(__dirname, "../data/resets.json");
@@ -34,9 +35,6 @@ const SUBREDDITS = ["codex", "ChatGPT", "OpenAI"];
 // Add handles here as new reliable sources are identified.
 const X_ACCOUNTS = ["thsottiaux"];
 
-// Posts within 6h of each other are considered the same event.
-const CLUSTER_WINDOW_MS = 6 * 60 * 60 * 1000;
-
 async function fetchWithRetry(url, options, retries = 2, timeoutMs = 10_000) {
   for (let i = 0; i <= retries; i++) {
     const controller = new AbortController();
@@ -55,25 +53,6 @@ async function fetchWithRetry(url, options, retries = 2, timeoutMs = 10_000) {
       await new Promise((r) => setTimeout(r, 1000));
     }
   }
-}
-
-// Minimal RSS/Atom parser — extracts <item> or <entry> blocks without dependencies.
-function parseRssItems(xml) {
-  const items = [];
-  const titleRe = /<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/;
-  const linkRe = /<(?:link|id)[^>]*>(?:<!\[CDATA\[)?(https?[^<\]]+)/;
-  const dateRe = /<(?:pubDate|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|published|updated)>/;
-  // Match both RSS <item> and Atom <entry>
-  const itemRe = /<(?:item|entry)>([\s\S]*?)<\/(?:item|entry)>/g;
-  let m;
-  while ((m = itemRe.exec(xml)) !== null) {
-    const block = m[1];
-    const title = (titleRe.exec(block) ?? [])[1]?.trim() ?? "";
-    const link = (linkRe.exec(block) ?? [])[1]?.trim() ?? "";
-    const pubDate = (dateRe.exec(block) ?? [])[1]?.trim() ?? "";
-    if (title && pubDate) items.push({ title, link, pubDate });
-  }
-  return items;
 }
 
 async function fetchRedditRss() {
@@ -197,63 +176,6 @@ async function fetchXApi() {
     console.warn("X API fetch failed:", err.message);
     return [];
   }
-}
-
-function clusterByWindow(posts) {
-  const sorted = [...posts].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-  const clusters = [];
-  for (const post of sorted) {
-    const postTime = new Date(post.createdAt).getTime();
-    const last = clusters.findLast(() => true);
-    if (last && postTime - new Date(last[0].createdAt).getTime() < CLUSTER_WINDOW_MS) {
-      last.push(post);
-    } else {
-      clusters.push([post]);
-    }
-  }
-  return clusters;
-}
-
-function buildEvent(cluster) {
-  const sorted = [...cluster].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-  const earliest = sorted[0];
-  const isOfficial = cluster.some((p) => p.isOfficial);
-  const status = deriveStatus(cluster.length, isOfficial);
-  const noun = cluster.length === 1 ? "report" : "reports";
-  const subs = [...new Set(cluster.map((p) => p.subreddit).filter(Boolean))];
-  const hasX = cluster.some((p) => p.sourcePlatform === "x");
-  const hasReddit = subs.length > 0;
-
-  let sourceName;
-  if (isOfficial) sourceName = "OpenAI Status";
-  else if (hasX && !hasReddit) sourceName = `${cluster.length} X (Twitter) ${noun}`;
-  else if (hasX) sourceName = `${cluster.length} ${noun} (Reddit + X)`;
-  else sourceName = `${cluster.length} Reddit ${noun}`;
-
-  const parts = [
-    ...(hasReddit ? [`r/${subs.join(", r/")}`] : []),
-    ...(hasX ? ["X (Twitter)"] : []),
-  ];
-  const description = isOfficial
-    ? earliest.title
-    : `${cluster.length} independent ${noun} across ${parts.join(" and ")} suggest a quota reset occurred around this time.`;
-
-  return {
-    id: `auto-${earliest.createdAt.slice(0, 10)}-${earliest.id.slice(0, 6)}`,
-    occurredAt: earliest.createdAt,
-    // Public rumors carry no reliable scheduled renewal date, so "how early"
-    // stays unknown until a report with a scheduled date corroborates it.
-    scheduledAt: null,
-    daysEarly: null,
-    reportedAt: earliest.createdAt,
-    status,
-    title: isOfficial ? earliest.title : "Quota reset reported by community",
-    affectedPlans: ["Unknown"],
-    reportCount: cluster.length,
-    sourceName,
-    sourceUrl: isOfficial ? earliest.url : cluster[0].url,
-    description,
-  };
 }
 
 try {

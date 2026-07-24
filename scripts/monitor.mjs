@@ -363,7 +363,6 @@ async function main() {
 
   if (flag("--watch")) {
     console.log(`Watching every ${INTERVAL_SEC}s. State: ${STATE_PATH}`);
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
         await pollOnce(auth, opts);

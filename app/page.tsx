@@ -55,6 +55,11 @@ function hoursAgo(isoDate: string): number {
   return (Date.now() - new Date(isoDate).getTime()) / 3_600_000;
 }
 
+function countRecentEvents(events: ResetEvent[]): number {
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  return events.filter((e) => new Date(e.occurredAt) >= cutoff).length;
+}
+
 export default function Home() {
   const events = [...resetEvents].sort(
     (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
@@ -85,8 +90,7 @@ export default function Home() {
       ? "—"
       : sortedPlans[0][0];
 
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const recentCount = events.filter((e) => new Date(e.occurredAt) >= thirtyDaysAgo).length;
+  const recentCount = countRecentEvents(events);
 
   return (
     <main>

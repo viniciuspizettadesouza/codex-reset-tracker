@@ -81,6 +81,27 @@ Run the unit tests for the detection and merge logic with `npm test`.
 > `scripts/fixtures/` are a best guess. Once you run `--raw` on your real account,
 > share the output and we'll lock `scripts/lib/quota.mjs` to the actual field names.
 
+## Autonomous collector (GitHub Actions)
+
+`scripts/collect.mjs` runs every 4 hours via `.github/workflows/collect.yml`,
+polling Reddit (r/codex, r/ChatGPT, r/OpenAI), OpenAI Status, and optionally
+the X API. When it finds matching posts it clusters them by time window, builds
+events, and commits any changes to `data/resets.json` automatically.
+
+### Enable X API ingestion
+
+The X API source is off by default and activates as soon as the secret is present.
+
+1. Create a free app at [developer.x.com](https://developer.x.com) (read-only
+   access is sufficient — no Elevated tier needed for recent-search).
+2. Copy the **Bearer Token** from the app's "Keys and tokens" page.
+3. In your GitHub repository go to **Settings → Secrets and variables → Actions**
+   and add a secret named `TWITTER_BEARER_TOKEN` with that value.
+
+The next scheduled run (or a manual **Run workflow** dispatch) will pick it up.
+No code changes are needed — the workflow already passes the secret to the
+collector, and the collector skips X silently when the token is absent.
+
 ## Update the timeline
 
 Edit `data/resets.json`, add a new event object, commit, and push. Events are sorted automatically by `occurredAt`.
