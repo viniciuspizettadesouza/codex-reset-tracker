@@ -1,0 +1,58 @@
+name: Report a quota reset
+description: Submit a Codex quota reset event to the community tracker.
+title: "[Reset] <brief description>"
+labels: ["reset-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing! Please fill in as much detail as you can.
+        Your report will be reviewed and added as a **Suspected** event automatically.
+
+  - type: input
+    id: occurred_at
+    attributes:
+      label: When did the reset occur? (UTC)
+      description: Approximate date and time in UTC. Format — YYYY-MM-DD HH:MM
+      placeholder: "2026-07-24 14:30"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected_plans
+    attributes:
+      label: Which plan(s) were affected?
+      multiple: true
+      options:
+        - Free
+        - Plus
+        - Pro
+        - Team
+        - Enterprise
+        - Unknown
+    validations:
+      required: true
+
+  - type: input
+    id: source_url
+    attributes:
+      label: Link to evidence (optional)
+      description: Reddit thread, tweet, forum post, or any public URL supporting this report.
+      placeholder: "https://reddit.com/r/ChatGPT/comments/..."
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? How did you notice the reset?
+      placeholder: "My weekly Codex quota reset about 18 hours early. Other users in the thread reported the same."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I observed this reset myself or verified it from multiple independent sources.
+          required: true

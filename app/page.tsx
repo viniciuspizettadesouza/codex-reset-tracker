@@ -1,19 +1,29 @@
-import resetEventsRaw from "@/data/resets.json";
+import resetData from "@/data/resets.json";
+import ReportForm from "@/app/components/ReportForm";
+
+type Plan = "Free" | "Plus" | "Pro" | "Team" | "Enterprise" | "Unknown";
 
 type ResetStatus = "official" | "community" | "suspected";
 
 type ResetEvent = {
   id: string;
   occurredAt: string;
+  reportedAt: string;
   status: ResetStatus;
   title: string;
-  affectedPlans: string[];
+  affectedPlans: Plan[];
+  reportCount: number;
   sourceName: string;
   sourceUrl?: string;
   description: string;
 };
 
-const resetEvents = resetEventsRaw as ResetEvent[];
+type ResetData = {
+  lastUpdatedAt: string;
+  events: ResetEvent[];
+};
+
+const { lastUpdatedAt, events: resetEvents } = resetData as ResetData;
 
 const statusLabels: Record<ResetStatus, string> = {
   official: "Official",
@@ -44,14 +54,17 @@ export default function Home() {
           <span className="brandMark">C</span>
           <span>Codex Reset Tracker</span>
         </a>
-        <a className="headerLink" href="#history">View history</a>
+        <nav className="headerNav">
+          <a className="headerLink" href="#history">History</a>
+          <a className="headerLink headerLinkAccent" href="#report">Report a reset</a>
+        </nav>
       </header>
 
       <section className="hero shell" id="top">
         <div className="eyebrow"><span className="pulse" /> Community quota monitor</div>
-        <h1>Know when Codex quotas reset.</h1>
+        <h1>Know when Codex quotas reset early.</h1>
         <p className="heroCopy">
-          A lightweight, evidence-based timeline of official announcements and community reports about early Codex quota resets.
+          Community-driven tracker of Codex quota resets that happen before the expected renewal date. No official source covers this — so we do.
         </p>
 
         <div className="latestCard">
@@ -72,6 +85,10 @@ export default function Home() {
             <div>
               <span className="metaLabel">Plans</span>
               <strong>{latest.affectedPlans.join(", ")}</strong>
+            </div>
+            <div>
+              <span className="metaLabel">Reports</span>
+              <strong>{latest.reportCount} {latest.reportCount === 1 ? "report" : "reports"}</strong>
             </div>
             <div>
               <span className="metaLabel">Source</span>
@@ -106,6 +123,7 @@ export default function Home() {
               <p>{event.description}</p>
               <div className="eventFooter">
                 <span>Plans: {event.affectedPlans.join(", ")}</span>
+                <span className="reportCount">{event.reportCount} {event.reportCount === 1 ? "report" : "reports"}</span>
                 {event.sourceUrl ? (
                   <a href={event.sourceUrl} target="_blank" rel="noreferrer">{event.sourceName} ↗</a>
                 ) : (
@@ -115,6 +133,17 @@ export default function Home() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="shell reportSection" id="report">
+        <div className="sectionHeading">
+          <div>
+            <p className="label">Community</p>
+            <h2>Report a reset</h2>
+          </div>
+          <p>Noticed your quota renewed before the expected date? Submit a report.</p>
+        </div>
+        <ReportForm />
       </section>
 
       <section className="shell methodology">
@@ -131,7 +160,7 @@ export default function Home() {
 
       <footer className="shell footer">
         <p>Independent community project. Not affiliated with OpenAI.</p>
-        <p>Update events in <code>data/resets.json</code>.</p>
+        <p className="footerUpdated">Updated {dateFormatter.format(new Date(lastUpdatedAt))}</p>
       </footer>
     </main>
   );

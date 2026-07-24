@@ -1,0 +1,68 @@
+name: Add community reset report
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  add-event:
+    # Only process issues created with the reset-report template (label added automatically)
+    if: contains(github.event.issue.labels.*.name, 'reset-report')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Parse issue and append event
+        id: parse
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: node scripts/issue-to-event.mjs
+
+      - name: Commit and push
+        if: steps.parse.outputs.added == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/resets.json
+          git commit -m "chore: add community report from issue #${{ github.event.issue.number }} [skip ci]"
+          git push
+
+      - name: Comment on issue
+        if: steps.parse.outputs.added == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "Thanks for the report! Your event has been added to the tracker as **Suspected**. It will be upgraded to **Community confirmed** if more reports come in. 🙏"
+            });
+            github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: "closed"
+            });
+
+      - name: Comment on parse failure
+        if: steps.parse.outputs.added != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "⚠️ Could not automatically parse this report. A maintainer will review it manually."
+            });
