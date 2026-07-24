@@ -116,7 +116,12 @@ export default function Home() {
         <div className={`liveBanner ${latest.status}`} role="alert">
           <span className={`liveBannerDot ${latest.status}`} aria-hidden="true" />
           <span>
-            <strong>Reset detected {Math.round(latestHoursAgo)}h ago</strong>
+            <strong>
+              {typeof latest.daysEarly === "number" && latest.daysEarly > 0
+                ? "Early reset detected"
+                : "Reset detected"}{" "}
+              {Math.round(latestHoursAgo)}h ago
+            </strong>
             {" — "}
             {latest.title}
           </span>
@@ -134,7 +139,10 @@ export default function Home() {
             <span className="quotaSignalLine short" />
           </div>
           <h1>Codex Reset Tracker</h1>
-          <p className="heroCopy">Community monitoring for unexpected Codex quota renewals.</p>
+          <p className="heroCopy">
+            OpenAI Codex sometimes resets usage limits early. This tracker shows you exactly when, so
+            you stop refreshing and start coding.
+          </p>
           <a className="heroAction" href="#latest">
             View latest reset <span aria-hidden="true">↓</span>
           </a>
@@ -157,7 +165,7 @@ export default function Home() {
       <section className="shell latestSection" id="latest">
         <div className="latestCard">
           <div>
-            <p className="label">Latest known event</p>
+            <p className="label">Most recent reset</p>
             <h2>{latest.title}</h2>
             <p className="latestDescription">{latest.description}</p>
           </div>
@@ -204,7 +212,7 @@ export default function Home() {
         <p className="label">At a glance</p>
         <div className="statsGrid">
           <div className="statTile">
-            <span className="statLabel">Total events</span>
+            <span className="statLabel">Total resets</span>
             <span className="statValue">{events.length}</span>
           </div>
           <div className="statTile">
@@ -216,7 +224,7 @@ export default function Home() {
             <span className="statValue">{mostAffectedPlan}</span>
           </div>
           <div className="statTile">
-            <span className="statLabel">Resets in last 30 days</span>
+            <span className="statLabel">Last 30 days</span>
             <span className="statValue">{recentCount}</span>
           </div>
         </div>
@@ -228,7 +236,7 @@ export default function Home() {
             <p className="label">Timeline</p>
             <h2>Reset history</h2>
           </div>
-          <p>{events.length} tracked events</p>
+          <p>{events.length} events on record</p>
         </div>
 
         <div className="timeline">
@@ -244,7 +252,7 @@ export default function Home() {
               <h3>{event.title}</h3>
               <p>{event.description}</p>
               <div className="eventFooter">
-                <span>Plans: {event.affectedPlans.join(", ")}</span>
+                <span>Affects: {event.affectedPlans.join(", ")}</span>
                 {typeof event.daysEarly === "number" && (
                   <span className="daysEarly">{formatDaysEarly(event.daysEarly)}</span>
                 )}
@@ -267,10 +275,13 @@ export default function Home() {
       <section className="shell reportSection" id="report">
         <div className="sectionHeading">
           <div>
-            <p className="label">Community</p>
+            <p className="label">Contribute</p>
             <h2>Report a reset</h2>
           </div>
-          <p>Noticed your quota renewed before the expected date? Submit a report.</p>
+          <p>
+            Noticed your Codex quota renewed before the expected date? Add what you saw and it helps
+            confirm the pattern. Takes under a minute.
+          </p>
         </div>
         <ReportForm />
       </section>
@@ -287,7 +298,7 @@ export default function Home() {
           </div>
           <div>
             <span className="legend community" /> <strong>Community confirmed</strong>
-            <p>Several consistent reports, without an official announcement.</p>
+            <p>Multiple consistent reports from independent users, with no official announcement.</p>
           </div>
           <div>
             <span className="legend suspected" /> <strong>Suspected</strong>
@@ -297,7 +308,7 @@ export default function Home() {
       </section>
 
       <footer className="shell footer">
-        <p>Independent community project. Not affiliated with OpenAI.</p>
+        <p>An independent project. Not affiliated with OpenAI.</p>
         <p>
           Feeds: <a href="/api/feed">JSON</a> · <a href="/api/feed/rss">RSS</a>
         </p>
