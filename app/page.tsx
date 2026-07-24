@@ -94,15 +94,17 @@ export default function Home() {
 
   return (
     <main>
-      <header className="siteHeader shell">
-        <a className="brand" href="#top" aria-label="Codex Reset Tracker home">
-          <span className="brandMark">C</span>
-          <span>Codex Reset Tracker</span>
-        </a>
-        <nav className="headerNav">
-          <a className="headerLink" href="#history">History</a>
-          <a className="headerLink headerLinkAccent" href="#report">Report a reset</a>
-        </nav>
+      <header className="siteHeader">
+        <div className="shell siteHeaderInner">
+          <a className="brand" href="#top" aria-label="Codex Reset Tracker home">
+            <span className="brandMark">C</span>
+            <span>Codex Reset Tracker</span>
+          </a>
+          <nav className="headerNav">
+            <a className="headerLink" href="#history">History</a>
+            <a className="headerLink headerLinkAccent" href="#report">Report a reset</a>
+          </nav>
+        </div>
       </header>
 
       {showBanner && (
