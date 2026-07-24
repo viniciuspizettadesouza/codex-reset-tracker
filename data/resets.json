@@ -4,6 +4,8 @@
     {
       "id": "report-2026-07-22",
       "occurredAt": "2026-07-22T00:00:00Z",
+      "scheduledAt": "2026-07-27T00:00:00Z",
+      "daysEarly": 5,
       "reportedAt": "2026-07-24T00:00:00Z",
       "status": "suspected",
       "title": "Quota reset ~5 days before scheduled date",

@@ -5,9 +5,13 @@ type Plan = "Free" | "Plus" | "Pro" | "Team" | "Enterprise" | "Unknown";
 
 type ResetStatus = "official" | "community" | "suspected";
 
+type EventSource = { name: string; url?: string };
+
 type ResetEvent = {
   id: string;
   occurredAt: string;
+  scheduledAt?: string | null;
+  daysEarly?: number | null;
   reportedAt: string;
   status: ResetStatus;
   title: string;
@@ -15,8 +19,14 @@ type ResetEvent = {
   reportCount: number;
   sourceName: string;
   sourceUrl?: string;
+  sources?: EventSource[];
   description: string;
 };
+
+function formatDaysEarly(days: number): string {
+  const rounded = Math.round(days * 10) / 10;
+  return `${rounded} ${rounded === 1 ? "day" : "days"} early`;
+}
 
 type ResetData = {
   lastUpdatedAt: string;
@@ -78,6 +88,12 @@ export default function Home() {
               <span className="metaLabel">Date</span>
               <strong>{dateFormatter.format(new Date(latest.occurredAt))}</strong>
             </div>
+            {typeof latest.daysEarly === "number" && (
+              <div>
+                <span className="metaLabel">How early</span>
+                <strong>{formatDaysEarly(latest.daysEarly)}</strong>
+              </div>
+            )}
             <div>
               <span className="metaLabel">Confidence</span>
               <span className={`badge ${latest.status}`}>{statusLabels[latest.status]}</span>
@@ -123,6 +139,9 @@ export default function Home() {
               <p>{event.description}</p>
               <div className="eventFooter">
                 <span>Plans: {event.affectedPlans.join(", ")}</span>
+                {typeof event.daysEarly === "number" && (
+                  <span className="daysEarly">{formatDaysEarly(event.daysEarly)}</span>
+                )}
                 <span className="reportCount">{event.reportCount} {event.reportCount === 1 ? "report" : "reports"}</span>
                 {event.sourceUrl ? (
                   <a href={event.sourceUrl} target="_blank" rel="noreferrer">{event.sourceName} ↗</a>

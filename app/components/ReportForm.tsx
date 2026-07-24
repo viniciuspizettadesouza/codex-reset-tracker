@@ -40,6 +40,21 @@ export default function ReportForm() {
       </div>
 
       <div className="formRow">
+        <label htmlFor="scheduledAt">
+          What renewal date did Codex show? <span className="required">*</span>
+          <span className="fieldHint">UTC — the date the app said your quota would renew.</span>
+        </label>
+        <input
+          id="scheduledAt"
+          name="scheduledAt"
+          type="text"
+          placeholder="2026-07-27 00:00"
+          required
+          pattern="\d{4}-\d{2}-\d{2}( \d{2}:\d{2})?"
+        />
+      </div>
+
+      <div className="formRow">
         <fieldset>
           <legend>Plans affected <span className="required">*</span></legend>
           <div className="planGrid">

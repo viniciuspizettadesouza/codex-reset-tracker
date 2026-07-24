@@ -1,46 +1,128 @@
-# Codex Reset Tracker — Project Vision
+# Codex Quota Watch — Project Vision
 
 ## The problem
 
-Codex has a weekly usage quota. When exhausted, the system shows a scheduled renewal date — for example, "your quota renews on July 27." The expected behavior is straightforward: the user waits until that date.
+Codex enforces a weekly usage quota. When it runs out, the app shows a scheduled
+renewal date — "your quota renews on July 27" — and the user is blocked until then.
 
-The problem is that this renewal **sometimes happens before the stated deadline**, with no warning or announcement. The user finds out by accident — they open the app a few days later and the quota is full again, even though the official date has not arrived yet.
+The catch: this renewal **sometimes happens before the stated deadline**, with no
+warning. You only find out by accident — you happen to open Codex days later and
+the quota is already full. So you either waste days you could have been working,
+or you keep manually checking. Neither is acceptable.
 
-This creates genuine uncertainty:
+## The mission
 
-- Is an early renewal a pattern or was it a one-off?
-- Did it happen to other users or just to me?
-- How early does it typically happen?
-- Is it worth waiting for a possible early renewal, or should I plan around the official date?
+**Tell me the moment my Codex quota comes back — especially if it comes back early —
+so I stop guessing and get back to work.**
 
-**No official or community source answers these questions.** OpenAI does not document this behavior, does not announce early renewals, and provides no mechanism to track them.
+Concretely, a monitor that:
 
-## The real goal
+1. Watches my own Codex account's quota state on a schedule.
+2. Detects the instant the weekly quota refills.
+3. Alerts me immediately, and flags whether the reset beat its scheduled date
+   (and by how much).
+4. Keeps a personal history so I can see whether early resets are a pattern for
+   my account, how early they tend to be, and whether it's worth waiting.
 
-Build a community-driven, autonomous tracker that records a history of early Codex quota renewals, allowing any user to know:
+## The data source — this is the point
 
-1. Whether early renewals have happened before
-2. How frequently they occur
-3. Which plans were affected
-4. The confidence level of each record (isolated observation, confirmed by multiple users, or from an official source)
+Rumors (Reddit, forums) and the OpenAI status page cannot answer this: OpenAI does
+not announce early renewals, and a stranger's report is not my account. The only
+authoritative source is **Codex itself**.
 
-## What "autonomous" means here
+The monitor reads the quota the same way the Codex client does:
 
-The tracker must not depend on any single person to keep the data current. This means:
+- **Endpoint:** `GET https://chatgpt.com/backend-api/wham/usage` — returns the
+  current rate-limit windows (the 5-hour "primary" and the weekly "secondary")
+  with percent used and reset timing.
+- **Auth:** `Authorization: Bearer <access_token>` + `ChatGPT-Account-Id: <account_id>`,
+  both read from the `auth.json` that the Codex CLI writes at login
+  (`$CODEX_HOME/auth.json`, default `~/.codex/auth.json`).
+- **Detection:** compare consecutive snapshots. A sharp drop in "percent used" is
+  a refill; if it happens before the reset time we were previously told, it was
+  early — with an exact "hours early" figure.
 
-- Any user who observes an early renewal can report it directly from the website, with no GitHub account or knowledge of the repository required
-- An automated collector monitors public sources (Reddit, OpenAI Status) every 4 hours for mentions of early renewals
-- Community reports are processed automatically and appear on the tracker without manual intervention
+This gives first-party, precise data. Public sources are demoted to optional
+corroboration, not the primary signal.
 
-Human curation exists only to upgrade the confidence level of an event — from Suspected to Community confirmed — as more independent reports arrive.
+## How it runs
+
+One account is enough. The monitor runs where I'm logged into Codex — my personal
+machine, or a small always-on host I've run `codex login` on once — on a schedule
+(cron / launchd) or in a `--watch` loop. When it detects a reset it notifies me
+via console, a webhook (Discord / Slack / ntfy / Telegram bot), and a native
+desktop notification.
+
+## Why early resets happen (context)
+
+These resets are real and mostly deliberate. In recent weeks OpenAI performed
+early resets — sometimes for specific users, sometimes for *all* paid plans — to
+compensate for problems in the usage-accounting system (e.g. Codex depleting
+quota faster than it should). The common causes:
+
+- **Global reset by OpenAI** to make up for a usage/accounting problem.
+- **Bug fixes** in the credit-accounting system.
+- **Temporary limit-policy changes** during infra testing or adjustments.
+
+So the scheduled date shown in the usage panel is the best reference, but it is
+**not a guarantee** — OpenAI can pull it forward without notice. That unpredictability
+is exactly what this project exists to catch.
+
+## The wider data-source landscape
+
+The personal monitor (`/wham/usage`) is the authoritative, first-party signal.
+Everything below is **secondary / corroboration** — useful to explain *why* a
+reset happened or to catch resets on accounts we don't monitor:
+
+- **Codex usage panel** — `https://chatgpt.com/codex/settings/usage` — the most
+  complete view: weekly usage, next reset time, other limits. This is what
+  `/wham/usage` backs.
+- **Limit banner** in the app, e.g. *"Your rate limit resets on Jul 23, 2026,
+  1:13 PM."* Same data, shown when near/at the limit.
+- **@thsottiaux on X** (Thibault Sottiaux, Codex lead) — ⭐ where extraordinary
+  global resets are usually announced *first*, e.g. *"I have reset Codex rate
+  limits for ALL paid plans…"*. There is no official reset changelog, so this is
+  the closest thing to an announcement channel.
+- **OpenAI Status** — `https://status.openai.com` — when a reset is tied to an
+  incident (e.g. the June 2026 "usage limits depleting faster than expected"),
+  it shows up here. Polled by `scripts/collect.mjs`.
+- **Reddit r/codex** (primary), r/ChatGPT, r/OpenAI — the community often notices
+  a reset within minutes, frequently before any official word. Polled by
+  `scripts/collect.mjs`.
+- **openai/codex GitHub issues** — users have requested that the usage UI show
+  special reset events and affected intervals (issues #20395, #20583); these are
+  not implemented, which is the gap this project fills.
+
+What does **not** exist anywhere today: a reset changelog, a per-account reset
+history, an in-app "your quota was reset" notification, or a page listing all
+extraordinary resets. Reference links are collected in
+[docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
+
+## Where the community tracker fits
+
+The public tracker (this repo's website) becomes the **second phase**, not a
+prerequisite. Once the personal monitor is proven, detected early resets can be
+contributed — anonymized — to the shared timeline, and other users' reports merge
+in to raise confidence. The value still grows with data, but the project now
+delivers something useful with a single account on day one.
+
+## Known caveats
+
+- **One account, one machine.** The monitor needs valid Codex credentials on the
+  host it runs on; it cannot see accounts it isn't logged into.
+- **Token expiry.** `auth.json`'s access token is refreshed by the Codex CLI. If
+  the token expires and the CLI hasn't refreshed it, the monitor reports a clear
+  401 and asks you to re-authenticate. Automatic refresh is a later step.
+- **Official resets exist.** OpenAI shipped a savable rate-limit reset feature
+  (`/wham/rate-limit-reset-credits`) on 2026-06-12. Some "early renewals" people
+  report may be these user-triggered resets rather than spontaneous ones — the
+  monitor distinguishes an actual refill from a merely rescheduled reset date.
+- **Terms of service.** Polling your own account's usage status periodically is
+  low-risk, but review current Codex/OpenAI terms before automating anything
+  beyond reading.
 
 ## What this project is not
 
-- Not a real-time Codex status monitor
-- Not an availability or latency tracker
-- It does not record on-schedule renewals — only those that happen **before** the indicated date
-- Not affiliated with OpenAI and has no access to internal data
-
-## Why this has value
-
-The value grows with usage. A tracker with 10 events recorded over 6 months is already enough to identify whether early renewals are rare or common, whether they affect specific plans, and whether there is any time pattern. With enough data, a user with an exhausted quota can make an informed decision instead of simply waiting in the dark.
+- Not a real-time Codex availability or latency monitor.
+- It does not record on-schedule renewals — only early ones.
+- Not affiliated with OpenAI and has no access to internal data.

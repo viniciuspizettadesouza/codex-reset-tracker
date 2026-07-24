@@ -1,0 +1,13 @@
+{
+  "_comment": "BEST-GUESS shape of GET /wham/usage. Snapshot 2: weekly quota refilled (2% used) with a fresh ~7-day window — i.e. it reset ~3 days before its previously-scheduled date.",
+  "primary": {
+    "used_percent": 8,
+    "window_minutes": 300,
+    "resets_in_seconds": 18000
+  },
+  "secondary": {
+    "used_percent": 2,
+    "window_minutes": 10080,
+    "resets_in_seconds": 604800
+  }
+}

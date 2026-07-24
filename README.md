@@ -1,8 +1,23 @@
 # Codex Reset Tracker
 
-A simple Version 1 MVP for publishing reported Codex quota reset events.
+Know the moment your Codex weekly quota resets — especially when it resets **early**.
+See [VISION.md](VISION.md) for the goal, [NEXT_STEPS.md](NEXT_STEPS.md) to continue
+the project, and [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for the data sources.
 
-## Run locally
+## ▶️ Start here: run the monitor
+
+On the machine where you're logged into the Codex CLI:
+
+```bash
+node scripts/monitor.mjs --raw    # confirm auth + capture the real usage payload
+node scripts/monitor.mjs          # one poll: detect a reset and alert you
+```
+
+Details and unattended scheduling are under
+[Personal quota monitor](#personal-quota-monitor) below; the full plan is in
+[NEXT_STEPS.md](NEXT_STEPS.md).
+
+## Run the website locally
 
 ```bash
 npm install
@@ -10,6 +25,59 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+## Personal quota monitor
+
+`scripts/monitor.mjs` watches your own Codex account and alerts you when the
+weekly quota refills — flagging whether it reset early. Run it on the machine
+where you're logged into the Codex CLI. See [VISION.md](VISION.md) for the why.
+
+```bash
+# 1. First, capture the exact usage payload shape (also confirms auth works):
+node scripts/monitor.mjs --raw
+
+# 2. Run a single poll (detects + alerts, then exits):
+node scripts/monitor.mjs
+
+# 3. Or keep watching every 15 minutes:
+node scripts/monitor.mjs --watch --interval 900
+```
+
+Configuration via environment variables (all optional):
+
+- `CODEX_HOME` — where `auth.json` lives (default `~/.codex`). Or pass `--auth <path>`.
+- `CODEX_WEBHOOK_URL` — POST alerts to a Discord / Slack / ntfy / Telegram-bot webhook.
+- `CODEX_MONITOR_STATE` — where snapshots are stored (default `~/.codex-reset-tracker/monitor-state.json`).
+- `CODEX_PLAN` — your plan (Plus / Pro / Team …), used when emitting events.
+
+Flags:
+
+- `--watch --interval <sec>` — keep polling instead of a single run.
+- `--emit-event [--tracker <path>]` — append detected weekly resets to the tracker
+  (`data/resets.json`) via the shared merge logic.
+- `--all-windows` — also alert on the 5-hour window (off by default; it resets
+  normally and would be noisy).
+- `--fixture <path>` — read usage from a file instead of the network (offline, no auth).
+
+On macOS, alerts also fire as native desktop notifications. To run unattended,
+schedule the single-poll form with cron or launchd, or leave `--watch` running on
+an always-on host.
+
+### Try it offline (no Codex account needed)
+
+Replay two saved snapshots to see an early weekly reset get detected and recorded:
+
+```bash
+S=/tmp/codex-demo-state.json; T=/tmp/codex-demo-tracker.json; echo '{"events":[]}' > "$T"
+CODEX_MONITOR_STATE=$S CODEX_PLAN=Plus node scripts/monitor.mjs --fixture scripts/fixtures/usage-weekly-low.json   --emit-event --tracker "$T"
+CODEX_MONITOR_STATE=$S CODEX_PLAN=Plus node scripts/monitor.mjs --fixture scripts/fixtures/usage-weekly-reset.json --emit-event --tracker "$T"
+```
+
+Run the unit tests for the detection and merge logic with `npm test`.
+
+> The `/wham/usage` JSON shape is not publicly documented; the fixtures in
+> `scripts/fixtures/` are a best guess. Once you run `--raw` on your real account,
+> share the output and we'll lock `scripts/lib/quota.mjs` to the actual field names.
 
 ## Update the timeline
 

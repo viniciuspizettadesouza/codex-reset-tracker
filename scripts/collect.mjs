@@ -13,23 +13,25 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { upsertEvent, deriveStatus } from "./lib/events.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_PATH = join(__dirname, "../data/resets.json");
 
 const USER_AGENT = "codex-reset-tracker/1.0 (github.com/user/codex-reset-tracker)";
+// Broad in r/codex (context is already Codex) plus Codex-qualified phrases for the
+// general subreddits. Matched case-insensitively against post titles.
 const KEYWORDS = [
-  "codex quota reset", "codex quota refresh", "codex early reset", "codex quota restored",
-  "codex quota back", "codex is back", "codex usage reset", "codex usage refresh",
-  "codex reset early", "codex refreshed", "codex quota replenished",
+  "rate limit reset", "rate limits reset", "limit reset", "limits reset",
+  "reset early", "reset for all", "reset for everyone", "quota reset",
+  "usage reset", "quota refresh", "quota restored", "quota back",
+  "codex is back", "codex refreshed", "quota replenished", "weekly limit reset",
 ];
-const SUBREDDITS = ["ChatGPT", "OpenAI"];
+// r/codex is where early resets are usually reported first (often within minutes).
+const SUBREDDITS = ["codex", "ChatGPT", "OpenAI"];
 
 // Posts within 6h of each other are considered the same event.
 const CLUSTER_WINDOW_MS = 6 * 60 * 60 * 1000;
-
-// Minimum reports for each confidence level.
-const COMMUNITY_THRESHOLD = 3;
 
 async function fetchWithRetry(url, options, retries = 2) {
   for (let i = 0; i <= retries; i++) {
@@ -68,7 +70,7 @@ function parseRssItems(xml) {
 
 async function fetchRedditRss() {
   const posts = [];
-  const query = encodeURIComponent("codex quota reset OR codex quota refresh OR codex early reset");
+  const query = encodeURIComponent("codex rate limit reset OR codex quota reset OR limits reset early");
 
   for (const sub of SUBREDDITS) {
     const url = `https://www.reddit.com/r/${sub}/search.rss?q=${query}&sort=new&t=week&restrict_sr=1`;
@@ -150,16 +152,11 @@ function clusterByWindow(posts) {
   return clusters;
 }
 
-function deriveStatus(cluster) {
-  if (cluster.some((p) => p.isOfficial)) return "official";
-  return cluster.length >= COMMUNITY_THRESHOLD ? "community" : "suspected";
-}
-
 function buildEvent(cluster) {
   const sorted = [...cluster].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   const earliest = sorted[0];
   const isOfficial = cluster.some((p) => p.isOfficial);
-  const status = deriveStatus(cluster);
+  const status = deriveStatus(cluster.length, isOfficial);
   const reportNoun = cluster.length === 1 ? "report" : "reports";
   const subs = [...new Set(cluster.map((p) => p.subreddit).filter(Boolean))];
 
@@ -170,6 +167,10 @@ function buildEvent(cluster) {
   return {
     id: `auto-${earliest.createdAt.slice(0, 10)}-${earliest.id.slice(0, 6)}`,
     occurredAt: earliest.createdAt,
+    // Public rumors carry no reliable scheduled renewal date, so "how early"
+    // stays unknown until a report with a scheduled date corroborates it.
+    scheduledAt: null,
+    daysEarly: null,
     reportedAt: earliest.createdAt,
     status,
     title: isOfficial ? earliest.title : "Quota reset reported by community",
@@ -179,14 +180,6 @@ function buildEvent(cluster) {
     sourceUrl: isOfficial ? earliest.url : cluster[0].url,
     description,
   };
-}
-
-function isDuplicate(event, existingEvents) {
-  const eventTime = new Date(event.occurredAt).getTime();
-  return existingEvents.some((existing) => {
-    const existingTime = new Date(existing.occurredAt).getTime();
-    return Math.abs(eventTime - existingTime) < CLUSTER_WINDOW_MS;
-  });
 }
 
 try {
@@ -208,31 +201,35 @@ try {
   console.log(`Clustered into ${clusters.length} event(s).`);
 
   const raw = JSON.parse(readFileSync(DATA_PATH, "utf-8"));
-  const existingEvents = raw.events ?? [];
-  const newEvents = [];
+  let events = raw.events ?? [];
+  let added = 0;
+  let merged = 0;
 
   for (const cluster of clusters) {
     const candidate = buildEvent(cluster);
-    if (isDuplicate(candidate, existingEvents)) {
-      console.log(`Skipping duplicate: ${candidate.id}`);
-      continue;
+    const result = upsertEvent(events, candidate);
+    events = result.events;
+    if (result.action === "added") {
+      added++;
+      console.log(`New event: [${candidate.status}] ${candidate.title} @ ${candidate.occurredAt}`);
+    } else {
+      merged++;
+      console.log(`Merged ${cluster.length} report(s) into an existing event @ ${candidate.occurredAt}`);
     }
-    console.log(`New event: [${candidate.status}] ${candidate.title} @ ${candidate.occurredAt}`);
-    newEvents.push(candidate);
   }
 
-  if (newEvents.length === 0) {
-    console.log("No new distinct events. Exiting with 0.");
+  if (added === 0 && merged === 0) {
+    console.log("No new or updated events. Exiting with 0.");
     process.exit(0);
   }
 
   const updated = {
     lastUpdatedAt: new Date().toISOString(),
-    events: [...existingEvents, ...newEvents],
+    events,
   };
 
   writeFileSync(DATA_PATH, JSON.stringify(updated, null, 2) + "\n", "utf-8");
-  console.log(`Wrote ${newEvents.length} new event(s) to data/resets.json.`);
+  console.log(`Wrote changes: ${added} added, ${merged} merged.`);
   process.exit(1);
 } catch (err) {
   console.error("Collector failed:", err);

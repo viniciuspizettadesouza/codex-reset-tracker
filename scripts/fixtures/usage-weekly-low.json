@@ -1,0 +1,13 @@
+{
+  "_comment": "BEST-GUESS shape of GET /wham/usage. Replace with a real --raw payload once captured. Snapshot 1: weekly quota nearly exhausted, scheduled to reset in ~3 days.",
+  "primary": {
+    "used_percent": 40,
+    "window_minutes": 300,
+    "resets_in_seconds": 3600
+  },
+  "secondary": {
+    "used_percent": 96,
+    "window_minutes": 10080,
+    "resets_in_seconds": 259200
+  }
+}

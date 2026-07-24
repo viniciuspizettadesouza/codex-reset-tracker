@@ -1,0 +1,269 @@
+#!/usr/bin/env node
+/**
+ * Personal Codex quota monitor.
+ *
+ * Polls the authenticated usage endpoint for the account whose credentials are
+ * in auth.json, and alerts you when your weekly quota refills — flagging
+ * whether the reset happened BEFORE its scheduled time. Designed to run on the
+ * machine where you're logged into Codex (via cron/launchd) or in a `--watch`
+ * loop.
+ *
+ * Usage:
+ *   node scripts/monitor.mjs --raw          # print the raw usage payload and exit
+ *   node scripts/monitor.mjs                 # one poll, detect + alert
+ *   node scripts/monitor.mjs --watch --interval 900
+ *   node scripts/monitor.mjs --fixture scripts/fixtures/usage-weekly-low.json
+ *                                            # offline: read usage from a file (no auth/network)
+ *   node scripts/monitor.mjs --emit-event    # also append detected resets to the tracker
+ *   node scripts/monitor.mjs --all-windows   # also alert on the 5h window (noisy; off by default)
+ *
+ * Auth: reads access_token + account_id from $CODEX_HOME/auth.json or
+ *       ~/.codex/auth.json (override with --auth <path>). Skipped with --fixture.
+ * Alerts: always logged; also POSTed to $CODEX_WEBHOOK_URL if set, and shown as
+ *         a macOS notification when available.
+ *
+ * Exit codes: 0 = ran ok (no reset or reset handled), 2 = error.
+ */
+
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { execFile } from "node:child_process";
+import { parseUsage, detectResets } from "./lib/quota.mjs";
+import { upsertEvent, computeDaysEarly } from "./lib/events.mjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const USAGE_URL = "https://chatgpt.com/backend-api/wham/usage";
+const args = process.argv.slice(2);
+const flag = (name) => args.includes(name);
+const opt = (name, def) => {
+  const i = args.indexOf(name);
+  return i >= 0 && args[i + 1] ? args[i + 1] : def;
+};
+
+const CODEX_HOME = process.env.CODEX_HOME || join(homedir(), ".codex");
+const AUTH_PATH = opt("--auth", join(CODEX_HOME, "auth.json"));
+const STATE_PATH =
+  process.env.CODEX_MONITOR_STATE ||
+  join(homedir(), ".codex-reset-tracker", "monitor-state.json");
+const WEBHOOK_URL = process.env.CODEX_WEBHOOK_URL || "";
+const INTERVAL_SEC = Number(opt("--interval", "900"));
+const FIXTURE_PATH = opt("--fixture", "");
+const EMIT_EVENT = flag("--emit-event");
+// The 5-hour window resets constantly and normally, so only the weekly window is
+// surfaced by default. --all-windows opts into alerts for every window.
+const ALL_WINDOWS = flag("--all-windows");
+const TRACKER_PATH = opt("--tracker", join(__dirname, "../data/resets.json"));
+const PLAN = process.env.CODEX_PLAN || "Unknown";
+
+function readAuth() {
+  let raw;
+  try {
+    raw = JSON.parse(readFileSync(AUTH_PATH, "utf-8"));
+  } catch {
+    throw new Error(
+      `Could not read auth.json at ${AUTH_PATH}. Install the Codex CLI and run \`codex login\` first, or pass --auth <path>.`,
+    );
+  }
+  // Token may sit at the top level or nested under `tokens` depending on version.
+  const t = raw.tokens ?? raw;
+  const accessToken = t.access_token ?? raw.access_token;
+  const accountId =
+    t.account_id ?? raw.account_id ?? t.accountId ?? raw.accountId;
+  if (!accessToken) {
+    throw new Error(`No access_token found in ${AUTH_PATH}.`);
+  }
+  return { accessToken, accountId };
+}
+
+async function fetchUsage({ accessToken, accountId }) {
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+    "User-Agent": "codex-reset-tracker-monitor/1.0",
+    Accept: "application/json",
+  };
+  if (accountId) headers["ChatGPT-Account-Id"] = accountId;
+
+  const res = await fetch(USAGE_URL, { headers });
+  if (res.status === 401 || res.status === 403) {
+    throw new Error(
+      `Usage endpoint returned ${res.status} — the access token is likely expired. Run \`codex\` (or \`codex login\`) on this machine to refresh auth.json, then retry.`,
+    );
+  }
+  if (!res.ok) {
+    throw new Error(`Usage endpoint returned HTTP ${res.status}.`);
+  }
+  return res.json();
+}
+
+async function getUsage(auth) {
+  if (FIXTURE_PATH) {
+    return JSON.parse(readFileSync(FIXTURE_PATH, "utf-8"));
+  }
+  return fetchUsage(auth);
+}
+
+// Append a detected reset to the community tracker, merging via upsertEvent so a
+// reset already recorded (e.g. from a community report) just raises its confidence.
+function emitToTracker(ev) {
+  let raw;
+  try {
+    raw = JSON.parse(readFileSync(TRACKER_PATH, "utf-8"));
+  } catch {
+    raw = { events: [] };
+  }
+  const occurredAt = ev.detectedAt;
+  const scheduledAt = ev.expectedResetAt ?? null;
+  const candidate = {
+    id: `monitor-${occurredAt.slice(0, 10)}-${ev.window}`,
+    occurredAt,
+    scheduledAt,
+    daysEarly: computeDaysEarly(occurredAt, scheduledAt),
+    reportedAt: new Date().toISOString(),
+    status: "suspected",
+    title: ev.early ? "Quota reset early (personal monitor)" : "Quota reset (personal monitor)",
+    affectedPlans: [PLAN],
+    reportCount: 1,
+    sourceName: "Personal monitor",
+    description: ev.early
+      ? `Monitor detected a ${ev.window} quota refill at ${occurredAt}, ~${ev.hoursEarly}h before the scheduled reset (${scheduledAt}).`
+      : `Monitor detected a ${ev.window} quota refill at ${occurredAt}. Scheduled reset was ${scheduledAt ?? "unknown"}.`,
+  };
+  const { events, action } = upsertEvent(raw.events ?? [], candidate);
+  raw.events = events;
+  raw.lastUpdatedAt = new Date().toISOString();
+  mkdirSync(dirname(TRACKER_PATH), { recursive: true });
+  writeFileSync(TRACKER_PATH, JSON.stringify(raw, null, 2) + "\n", "utf-8");
+  console.log(`Tracker updated (${action}): ${candidate.id}`);
+}
+
+function loadState() {
+  try {
+    return JSON.parse(readFileSync(STATE_PATH, "utf-8"));
+  } catch {
+    return { windows: {} };
+  }
+}
+
+function saveState(state) {
+  mkdirSync(dirname(STATE_PATH), { recursive: true });
+  writeFileSync(STATE_PATH, JSON.stringify(state, null, 2) + "\n", "utf-8");
+}
+
+function notifyMac(title, message) {
+  if (process.platform !== "darwin") return;
+  execFile("/usr/bin/osascript", [
+    "-e",
+    `display notification ${JSON.stringify(message)} with title ${JSON.stringify(title)}`,
+  ]);
+}
+
+async function notifyWebhook(text) {
+  if (!WEBHOOK_URL) return;
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // `content`=Discord, `text`=Slack/Mattermost/ntfy — send both for portability.
+      body: JSON.stringify({ content: text, text }),
+    });
+  } catch (err) {
+    console.warn("Webhook notification failed:", err.message);
+  }
+}
+
+async function alert(title, message) {
+  console.log(`\n🔔 ${title}\n${message}\n`);
+  notifyMac(title, message);
+  await notifyWebhook(`${title}\n${message}`);
+}
+
+async function handleEvent(ev) {
+  const scope = ev.window === "weekly" ? "Weekly quota" : `${ev.window} quota`;
+  if (ev.refilled && ev.early) {
+    await alert(
+      `Codex ${scope} reset EARLY`,
+      `Refilled ${ev.hoursEarly}h before its scheduled reset (${ev.expectedResetAt}). Used ${ev.prevPercent}% → ${ev.currPercent}%.`,
+    );
+  } else if (ev.refilled) {
+    await alert(
+      `Codex ${scope} reset`,
+      `Quota refilled (${ev.prevPercent}% → ${ev.currPercent}%). Scheduled reset was ${ev.expectedResetAt ?? "unknown"}.`,
+    );
+  } else {
+    // Only the announced reset time moved earlier — a heads-up, not a refill yet.
+    await alert(
+      `Codex ${scope} reset time moved earlier`,
+      `The scheduled reset was pulled forward from ${ev.expectedResetAt} to ${ev.newResetAt}. Quota still at ${ev.currPercent}%.`,
+    );
+  }
+  // Only real weekly refills are worth contributing to the tracker.
+  if (EMIT_EVENT && ev.refilled && ev.window === "weekly") {
+    emitToTracker(ev);
+  }
+}
+
+async function pollOnce(auth) {
+  const raw = await getUsage(auth);
+  if (flag("--raw")) {
+    console.log(JSON.stringify(raw, null, 2));
+    return;
+  }
+
+  const windows = parseUsage(raw);
+  if (Object.keys(windows).length === 0) {
+    console.warn(
+      "Could not parse any rate-limit windows from the usage payload. Run with --raw to inspect the shape.",
+    );
+  }
+
+  const state = loadState();
+  const events = detectResets(state.windows, windows);
+
+  for (const ev of events) {
+    if (ev.window !== "weekly" && !ALL_WINDOWS) {
+      console.log(`(${ev.window} window changed — ignoring; use --all-windows to alert on it)`);
+      continue;
+    }
+    await handleEvent(ev);
+  }
+
+  if (events.length === 0) {
+    const wk = windows.weekly;
+    console.log(
+      `Polled OK. ${wk ? `Weekly: ${wk.usedPercent}% used, resets ${wk.resetsAt}.` : "No weekly window in payload."} No reset detected.`,
+    );
+  }
+
+  state.windows = windows;
+  state.lastPollAt = new Date().toISOString();
+  saveState(state);
+}
+
+async function main() {
+  // Fixture mode reads usage from a file, so no credentials are needed.
+  const auth = FIXTURE_PATH ? null : readAuth();
+
+  if (flag("--watch")) {
+    console.log(`Watching every ${INTERVAL_SEC}s. State: ${STATE_PATH}`);
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      try {
+        await pollOnce(auth);
+      } catch (err) {
+        console.error("Poll failed:", err.message);
+      }
+      await new Promise((r) => setTimeout(r, INTERVAL_SEC * 1000));
+    }
+  } else {
+    await pollOnce(auth);
+  }
+}
+
+try {
+  await main();
+} catch (err) {
+  console.error("Monitor error:", err.message);
+  process.exit(2);
+}
