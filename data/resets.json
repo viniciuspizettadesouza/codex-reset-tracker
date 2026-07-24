@@ -1,0 +1,30 @@
+[
+  {
+    "id": "demo-2026-07-18",
+    "occurredAt": "2026-07-18T18:24:00Z",
+    "status": "community",
+    "title": "Early quota reset reported",
+    "affectedPlans": ["Plus", "Pro"],
+    "sourceName": "Community reports",
+    "description": "Multiple users reported that their Codex quota became available before the scheduled weekly reset."
+  },
+  {
+    "id": "demo-2026-06-23",
+    "occurredAt": "2026-06-23T13:00:00Z",
+    "status": "official",
+    "title": "Usage incident followed by reset",
+    "affectedPlans": ["Paid plans"],
+    "sourceName": "OpenAI Status",
+    "sourceUrl": "https://status.openai.com/",
+    "description": "Example official event. Replace this description and URL with the exact incident page before publishing as confirmed."
+  },
+  {
+    "id": "demo-2026-05-28",
+    "occurredAt": "2026-05-28T09:30:00Z",
+    "status": "suspected",
+    "title": "Possible quota refresh",
+    "affectedPlans": ["Unknown"],
+    "sourceName": "Unverified reports",
+    "description": "A small number of reports indicated refreshed availability, but there was not enough evidence to mark it as confirmed."
+  }
+]
