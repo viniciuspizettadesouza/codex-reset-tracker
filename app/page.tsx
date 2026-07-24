@@ -96,7 +96,9 @@ export default function Home() {
       <header className="siteHeader">
         <div className="shell siteHeaderInner">
           <a className="brand" href="#top" aria-label="Codex Reset Tracker home">
-            <span className="brandMark">C</span>
+            <span className="brandMark" aria-hidden="true">
+              &gt;_
+            </span>
             <span>Codex Reset Tracker</span>
           </a>
           <nav className="headerNav">
@@ -111,7 +113,7 @@ export default function Home() {
       </header>
 
       {showBanner && (
-        <div className="liveBanner" role="alert">
+        <div className={`liveBanner ${latest.status}`} role="alert">
           <span className={`liveBannerDot ${latest.status}`} aria-hidden="true" />
           <span>
             <strong>Reset detected {Math.round(latestHoursAgo)}h ago</strong>
@@ -124,16 +126,35 @@ export default function Home() {
         </div>
       )}
 
-      <section className="hero shell" id="top">
-        <div className="eyebrow">
-          <span className="pulse" /> Community quota monitor
+      <section className="hero" id="top">
+        <div className="shell heroInner">
+          <div className="quotaSignal" aria-hidden="true">
+            <span className="quotaSignalPrompt">&gt;_</span>
+            <span className="quotaSignalLine" />
+            <span className="quotaSignalLine short" />
+          </div>
+          <h1>Codex Reset Tracker</h1>
+          <p className="heroCopy">Community monitoring for unexpected Codex quota renewals.</p>
+          <a className="heroAction" href="#latest">
+            View latest reset <span aria-hidden="true">↓</span>
+          </a>
+          <div className="heroTerminal" aria-hidden="true">
+            <span>weekly_limit</span>
+            <span>[##########]</span>
+            <strong>reset</strong>
+            <span>expected</span>
+            <span>
+              {latest.scheduledAt ? dateFormatter.format(new Date(latest.scheduledAt)) : "unknown"}
+            </span>
+            <span />
+            <span>observed</span>
+            <span>{dateFormatter.format(new Date(latest.occurredAt))}</span>
+            <span>&gt;&gt;&gt;</span>
+          </div>
         </div>
-        <h1>Know when Codex quotas reset early.</h1>
-        <p className="heroCopy">
-          Community-driven tracker of Codex quota resets that happen before the expected renewal
-          date. No official source covers this — so we do.
-        </p>
+      </section>
 
+      <section className="shell latestSection" id="latest">
         <div className="latestCard">
           <div>
             <p className="label">Latest known event</p>
