@@ -8,12 +8,7 @@
  * and tighten these if needed.
  */
 
-const PERCENT_KEYS = [
-  "used_percent",
-  "usage_percent",
-  "percent_used",
-  "percent",
-];
+const PERCENT_KEYS = ["used_percent", "usage_percent", "percent_used", "percent"];
 const RESET_AT_KEYS = ["resets_at", "reset_at", "reset_time"];
 const RESET_IN_KEYS = [
   "resets_in_seconds",
@@ -21,11 +16,7 @@ const RESET_IN_KEYS = [
   "seconds_until_reset",
   "reset_in_seconds",
 ];
-const WINDOW_MIN_KEYS = [
-  "window_minutes",
-  "window_size_minutes",
-  "window_size_in_minutes",
-];
+const WINDOW_MIN_KEYS = ["window_minutes", "window_size_minutes", "window_size_in_minutes"];
 
 function firstNumber(obj, keys) {
   for (const k of keys) {
@@ -109,9 +100,7 @@ export function detectResetForWindow(prev, curr, opts = {}) {
   if (!prev || !curr) return null;
 
   const dropped =
-    prev.usedPercent != null && curr.usedPercent != null
-      ? prev.usedPercent - curr.usedPercent
-      : 0;
+    prev.usedPercent != null && curr.usedPercent != null ? prev.usedPercent - curr.usedPercent : 0;
 
   const refilled =
     dropped >= dropThreshold ||
@@ -123,8 +112,7 @@ export function detectResetForWindow(prev, curr, opts = {}) {
   const resetMovedEarlier =
     prev.resetsAt &&
     curr.resetsAt &&
-    new Date(curr.resetsAt).getTime() <
-      new Date(prev.resetsAt).getTime() - resetMoveThresholdMs;
+    new Date(curr.resetsAt).getTime() < new Date(prev.resetsAt).getTime() - resetMoveThresholdMs;
 
   if (!refilled && !resetMovedEarlier) return null;
 

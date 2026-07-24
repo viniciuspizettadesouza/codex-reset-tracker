@@ -77,8 +77,7 @@ function mergeSources(existing, candidate) {
  * an official source promotes the headline source and status.
  */
 function mergeInto(existing, candidate) {
-  const isOfficial =
-    existing.status === "official" || candidate.status === "official";
+  const isOfficial = existing.status === "official" || candidate.status === "official";
   const reportCount = (existing.reportCount ?? 1) + (candidate.reportCount ?? 1);
 
   const earliest =

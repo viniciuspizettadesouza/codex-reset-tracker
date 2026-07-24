@@ -47,8 +47,7 @@ function parseDate(raw) {
   const trimmed = raw.trim();
   const normalized = trimmed.replace(" ", "T");
   const withTime = normalized.includes("T") ? normalized : `${normalized}T00:00`;
-  const full =
-    withTime.includes("Z") || withTime.includes("+") ? withTime : `${withTime}:00Z`;
+  const full = withTime.includes("Z") || withTime.includes("+") ? withTime : `${withTime}:00Z`;
   const d = new Date(full);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
@@ -58,9 +57,7 @@ function main() {
   const issueNumber = process.env.ISSUE_NUMBER ?? "0";
   const issueUrl = process.env.ISSUE_URL ?? "";
 
-  const occurredAt = parseDate(
-    parseField(body, String.raw`When did the reset occur\? \(UTC\)`),
-  );
+  const occurredAt = parseDate(parseField(body, String.raw`When did the reset occur\? \(UTC\)`));
   if (!occurredAt) {
     console.error("Could not parse occurred_at from issue body.");
     setOutput("added", "false");
@@ -97,8 +94,7 @@ function main() {
   }
 
   const affectedPlans = parsePlans(body);
-  const sourceUrl =
-    parseField(body, String.raw`Link to evidence \(optional\)`) || issueUrl;
+  const sourceUrl = parseField(body, String.raw`Link to evidence \(optional\)`) || issueUrl;
 
   const candidate = {
     id: `issue-${issueNumber}-${occurredAt.slice(0, 10)}`,

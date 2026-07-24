@@ -14,7 +14,10 @@ export default function ReportForm() {
     return (
       <div className="reportSuccess">
         <p className="reportSuccessIcon">✓</p>
-        <p><strong>Report submitted.</strong> It will appear on the tracker as <span className="badge suspected">Suspected</span> shortly.</p>
+        <p>
+          <strong>Report submitted.</strong> It will appear on the tracker as{" "}
+          <span className="badge suspected">Suspected</span> shortly.
+        </p>
       </div>
     );
   }
@@ -22,7 +25,13 @@ export default function ReportForm() {
   return (
     <form ref={formRef} action={action} className="reportForm">
       {/* Honeypot — hidden from real users */}
-      <input type="text" name="website" tabIndex={-1} aria-hidden="true" style={{ display: "none" }} />
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        aria-hidden="true"
+        style={{ display: "none" }}
+      />
 
       <div className="formRow">
         <label htmlFor="occurredAt">
@@ -56,7 +65,9 @@ export default function ReportForm() {
 
       <div className="formRow">
         <fieldset>
-          <legend>Plans affected <span className="required">*</span></legend>
+          <legend>
+            Plans affected <span className="required">*</span>
+          </legend>
           <div className="planGrid">
             {PLANS.map((plan) => (
               <label key={plan} className="planOption">
@@ -71,7 +82,9 @@ export default function ReportForm() {
       <div className="formRow">
         <label htmlFor="description">
           What did you observe? <span className="required">*</span>
-          <span className="fieldHint">Quota exhausted, then appeared renewed before expected date.</span>
+          <span className="fieldHint">
+            Quota exhausted, then appeared renewed before expected date.
+          </span>
         </label>
         <textarea
           id="description"
@@ -95,9 +108,7 @@ export default function ReportForm() {
         />
       </div>
 
-      {state.status === "error" && (
-        <p className="formError">{state.message}</p>
-      )}
+      {state.status === "error" && <p className="formError">{state.message}</p>}
 
       <button type="submit" className="submitBtn" disabled={pending}>
         {pending ? "Submitting…" : "Submit report"}

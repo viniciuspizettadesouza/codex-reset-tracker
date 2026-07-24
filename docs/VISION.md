@@ -56,7 +56,7 @@ desktop notification.
 ## Why early resets happen (context)
 
 These resets are real and mostly deliberate. In recent weeks OpenAI performed
-early resets — sometimes for specific users, sometimes for *all* paid plans — to
+early resets — sometimes for specific users, sometimes for _all_ paid plans — to
 compensate for problems in the usage-accounting system (e.g. Codex depleting
 quota faster than it should). The common causes:
 
@@ -71,17 +71,17 @@ is exactly what this project exists to catch.
 ## The wider data-source landscape
 
 The personal monitor (`/wham/usage`) is the authoritative, first-party signal.
-Everything below is **secondary / corroboration** — useful to explain *why* a
+Everything below is **secondary / corroboration** — useful to explain _why_ a
 reset happened or to catch resets on accounts we don't monitor:
 
 - **Codex usage panel** — `https://chatgpt.com/codex/settings/usage` — the most
   complete view: weekly usage, next reset time, other limits. This is what
   `/wham/usage` backs.
-- **Limit banner** in the app, e.g. *"Your rate limit resets on Jul 23, 2026,
-  1:13 PM."* Same data, shown when near/at the limit.
+- **Limit banner** in the app, e.g. _"Your rate limit resets on Jul 23, 2026,
+  1:13 PM."_ Same data, shown when near/at the limit.
 - **@thsottiaux on X** (Thibault Sottiaux, Codex lead) — ⭐ where extraordinary
-  global resets are usually announced *first*, e.g. *"I have reset Codex rate
-  limits for ALL paid plans…"*. There is no official reset changelog, so this is
+  global resets are usually announced _first_, e.g. _"I have reset Codex rate
+  limits for ALL paid plans…"_. There is no official reset changelog, so this is
   the closest thing to an announcement channel.
 - **OpenAI Status** — `https://status.openai.com` — when a reset is tied to an
   incident (e.g. the June 2026 "usage limits depleting faster than expected"),

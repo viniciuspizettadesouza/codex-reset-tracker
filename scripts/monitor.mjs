@@ -45,8 +45,7 @@ const opt = (name, def) => {
 const CODEX_HOME = process.env.CODEX_HOME || join(homedir(), ".codex");
 const AUTH_PATH = opt("--auth", join(CODEX_HOME, "auth.json"));
 const STATE_PATH =
-  process.env.CODEX_MONITOR_STATE ||
-  join(homedir(), ".codex-reset-tracker", "monitor-state.json");
+  process.env.CODEX_MONITOR_STATE || join(homedir(), ".codex-reset-tracker", "monitor-state.json");
 const WEBHOOK_URL = process.env.CODEX_WEBHOOK_URL || "";
 const INTERVAL_SEC = Number(opt("--interval", "900"));
 const FIXTURE_PATH = opt("--fixture", "");
@@ -69,8 +68,7 @@ function readAuth() {
   // Token may sit at the top level or nested under `tokens` depending on version.
   const t = raw.tokens ?? raw;
   const accessToken = t.access_token ?? raw.access_token;
-  const accountId =
-    t.account_id ?? raw.account_id ?? t.accountId ?? raw.accountId;
+  const accountId = t.account_id ?? raw.account_id ?? t.accountId ?? raw.accountId;
   const refreshToken = raw.tokens?.refresh_token ?? raw.refresh_token ?? null;
   if (!accessToken) {
     throw new Error(`No access_token found in ${AUTH_PATH}.`);
@@ -227,15 +225,9 @@ async function notifyWebhook(title, message) {
   const text = `${title}\n${message}`;
   let payload;
 
-  if (
-    WEBHOOK_URL.includes("discord.com/api/webhooks") ||
-    WEBHOOK_URL.includes("discordapp.com")
-  ) {
+  if (WEBHOOK_URL.includes("discord.com/api/webhooks") || WEBHOOK_URL.includes("discordapp.com")) {
     payload = { embeds: [{ title, description: message, color: 0x55e6a5 }] };
-  } else if (
-    WEBHOOK_URL.includes("hooks.slack.com") ||
-    WEBHOOK_URL.includes("/slack")
-  ) {
+  } else if (WEBHOOK_URL.includes("hooks.slack.com") || WEBHOOK_URL.includes("/slack")) {
     payload = {
       blocks: [
         {
@@ -340,10 +332,7 @@ async function pollOnce(auth, opts = {}) {
 
 async function main() {
   if (flag("--test-alert")) {
-    await alert(
-      "Test alert",
-      "Monitor alert test — if you see this, notifications are working.",
-    );
+    await alert("Test alert", "Monitor alert test — if you see this, notifications are working.");
     return;
   }
 

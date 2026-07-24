@@ -23,10 +23,22 @@ const USER_AGENT = "codex-reset-tracker/1.0 (github.com/user/codex-reset-tracker
 // Broad in r/codex (context is already Codex) plus Codex-qualified phrases for the
 // general subreddits. Matched case-insensitively against post titles.
 const KEYWORDS = [
-  "rate limit reset", "rate limits reset", "limit reset", "limits reset",
-  "reset early", "reset for all", "reset for everyone", "quota reset",
-  "usage reset", "quota refresh", "quota restored", "quota back",
-  "codex is back", "codex refreshed", "quota replenished", "weekly limit reset",
+  "rate limit reset",
+  "rate limits reset",
+  "limit reset",
+  "limits reset",
+  "reset early",
+  "reset for all",
+  "reset for everyone",
+  "quota reset",
+  "usage reset",
+  "quota refresh",
+  "quota restored",
+  "quota back",
+  "codex is back",
+  "codex refreshed",
+  "quota replenished",
+  "weekly limit reset",
 ];
 // r/codex is where early resets are usually reported first (often within minutes).
 const SUBREDDITS = ["codex", "ChatGPT", "OpenAI"];
@@ -57,7 +69,9 @@ async function fetchWithRetry(url, options, retries = 2, timeoutMs = 10_000) {
 
 async function fetchRedditRss() {
   const posts = [];
-  const query = encodeURIComponent("codex rate limit reset OR codex quota reset OR limits reset early");
+  const query = encodeURIComponent(
+    "codex rate limit reset OR codex quota reset OR limits reset early",
+  );
 
   for (const sub of SUBREDDITS) {
     const url = `https://www.reddit.com/r/${sub}/search.rss?q=${query}&sort=new&t=week&restrict_sr=1`;
@@ -135,9 +149,7 @@ async function fetchXApi() {
 
   const accountFilter = X_ACCOUNTS.map((a) => `from:${a}`).join(" OR ");
   const keywordFilter = "codex quota reset OR codex limit reset OR codex rate limit reset";
-  const query = encodeURIComponent(
-    `(${keywordFilter} OR ${accountFilter}) -is:retweet lang:en`,
-  );
+  const query = encodeURIComponent(`(${keywordFilter} OR ${accountFilter}) -is:retweet lang:en`);
   const url =
     "https://api.twitter.com/2/tweets/search/recent" +
     `?query=${query}&max_results=100&tweet.fields=created_at&expansions=author_id&user.fields=username`;
@@ -186,7 +198,9 @@ try {
     fetchXApi(),
   ]);
 
-  console.log(`Total: ${redditPosts.length} Reddit posts, ${officialIncidents.length} official incidents, ${xPosts.length} X posts.`);
+  console.log(
+    `Total: ${redditPosts.length} Reddit posts, ${officialIncidents.length} official incidents, ${xPosts.length} X posts.`,
+  );
 
   const allPosts = [...redditPosts, ...officialIncidents, ...xPosts];
   if (allPosts.length === 0) {
@@ -211,7 +225,9 @@ try {
       console.log(`New event: [${candidate.status}] ${candidate.title} @ ${candidate.occurredAt}`);
     } else {
       merged++;
-      console.log(`Merged ${cluster.length} report(s) into an existing event @ ${candidate.occurredAt}`);
+      console.log(
+        `Merged ${cluster.length} report(s) into an existing event @ ${candidate.occurredAt}`,
+      );
     }
   }
 

@@ -1,6 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseRssItems, clusterByWindow, buildEvent, CLUSTER_WINDOW_MS } from "../scripts/lib/collect-utils.mjs";
+import {
+  parseRssItems,
+  clusterByWindow,
+  buildEvent,
+  CLUSTER_WINDOW_MS,
+} from "../scripts/lib/collect-utils.mjs";
 
 // ── parseRssItems ────────────────────────────────────────────────────────────
 
@@ -116,7 +121,13 @@ test("clusterByWindow uses window edge: exactly CLUSTER_WINDOW_MS apart stays se
 // ── buildEvent ───────────────────────────────────────────────────────────────
 
 function redditPost(id, isoDate, subreddit = "codex") {
-  return { id, createdAt: isoDate, title: `Post ${id}`, url: `https://reddit.com/${id}`, subreddit };
+  return {
+    id,
+    createdAt: isoDate,
+    title: `Post ${id}`,
+    url: `https://reddit.com/${id}`,
+    subreddit,
+  };
 }
 
 test("buildEvent with a single Reddit post produces a suspected event", () => {
@@ -138,7 +149,13 @@ test("buildEvent with 3 Reddit posts produces a community event", () => {
 });
 
 test("buildEvent with an official post produces an official event", () => {
-  const official = { id: "openai-status-1", createdAt: T0, title: "Codex quota reset", url: "https://status.openai.com", isOfficial: true };
+  const official = {
+    id: "openai-status-1",
+    createdAt: T0,
+    title: "Codex quota reset",
+    url: "https://status.openai.com",
+    isOfficial: true,
+  };
   const ev = buildEvent([official]);
   assert.equal(ev.status, "official");
   assert.equal(ev.sourceName, "OpenAI Status");
@@ -146,7 +163,13 @@ test("buildEvent with an official post produces an official event", () => {
 });
 
 test("buildEvent with Reddit + X posts reflects mixed source in sourceName", () => {
-  const xPost = { id: "x-123", createdAt: T1H, title: "tweet", url: "https://x.com/user/123", sourcePlatform: "x" };
+  const xPost = {
+    id: "x-123",
+    createdAt: T1H,
+    title: "tweet",
+    url: "https://x.com/user/123",
+    sourcePlatform: "x",
+  };
   const ev = buildEvent([redditPost("a", T0), xPost]);
   assert.match(ev.sourceName, /Reddit \+ X/);
 });

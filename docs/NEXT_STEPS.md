@@ -75,7 +75,7 @@ To run unattended, schedule the one-shot form with cron/launchd, or leave the
 
 ## Gotchas
 
-- The `~/.codex` on the original dev machine belongs to a *different* tool — the
+- The `~/.codex` on the original dev machine belongs to a _different_ tool — the
   real OpenAI Codex CLI stores `auth.json`/`config.toml`/`sessions/`.
 - Reddit RSS is often blocked from datacenter IPs; the collector can go silent.
 - Some "early resets" are OpenAI's user-triggered savable resets, not spontaneous;

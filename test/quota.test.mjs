@@ -32,7 +32,10 @@ test("parseUsage handles an array of windows", () => {
 });
 
 test("extractWindow prefers absolute reset over relative", () => {
-  const win = extractWindow({ used_percent: 5, resets_at: "2026-08-01T00:00:00Z", resets_in_seconds: 999 }, NOW);
+  const win = extractWindow(
+    { used_percent: 5, resets_at: "2026-08-01T00:00:00Z", resets_in_seconds: 999 },
+    NOW,
+  );
   assert.equal(win.resetsAt, "2026-08-01T00:00:00Z");
 });
 
@@ -72,8 +75,14 @@ test("no previous snapshot yields no event (baseline poll)", () => {
 });
 
 test("detectResets runs across all windows", () => {
-  const prev = { weekly: { usedPercent: 96, resetsAt: "2026-07-27T12:00:00Z" }, "5h": { usedPercent: 90, resetsAt: "2026-07-24T13:00:00Z" } };
-  const curr = { weekly: { usedPercent: 3, resetsAt: "2026-08-03T12:00:00Z" }, "5h": { usedPercent: 88, resetsAt: "2026-07-24T13:30:00Z" } };
+  const prev = {
+    weekly: { usedPercent: 96, resetsAt: "2026-07-27T12:00:00Z" },
+    "5h": { usedPercent: 90, resetsAt: "2026-07-24T13:00:00Z" },
+  };
+  const curr = {
+    weekly: { usedPercent: 3, resetsAt: "2026-08-03T12:00:00Z" },
+    "5h": { usedPercent: 88, resetsAt: "2026-07-24T13:30:00Z" },
+  };
   const events = detectResets(prev, curr, { now: Date.parse("2026-07-26T12:00:00Z") });
   assert.equal(events.length, 1);
   assert.equal(events[0].window, "weekly");

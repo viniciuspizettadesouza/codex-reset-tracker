@@ -85,8 +85,7 @@ export default function Home() {
   }
   const sortedPlans = Object.entries(planCounts).sort((a, b) => b[1] - a[1]);
   const mostAffectedPlan =
-    sortedPlans.length === 0 ||
-    (sortedPlans.length > 1 && sortedPlans[0][1] === sortedPlans[1][1])
+    sortedPlans.length === 0 || (sortedPlans.length > 1 && sortedPlans[0][1] === sortedPlans[1][1])
       ? "—"
       : sortedPlans[0][0];
 
@@ -101,8 +100,12 @@ export default function Home() {
             <span>Codex Reset Tracker</span>
           </a>
           <nav className="headerNav">
-            <a className="headerLink" href="#history">History</a>
-            <a className="headerLink headerLinkAccent" href="#report">Report a reset</a>
+            <a className="headerLink" href="#history">
+              History
+            </a>
+            <a className="headerLink headerLinkAccent" href="#report">
+              Report a reset
+            </a>
           </nav>
         </div>
       </header>
@@ -112,17 +115,23 @@ export default function Home() {
           <span className={`liveBannerDot ${latest.status}`} aria-hidden="true" />
           <span>
             <strong>Reset detected {Math.round(latestHoursAgo)}h ago</strong>
-            {" — "}{latest.title}
+            {" — "}
+            {latest.title}
           </span>
-          <a className="liveBannerLink" href="#history">View details</a>
+          <a className="liveBannerLink" href="#history">
+            View details
+          </a>
         </div>
       )}
 
       <section className="hero shell" id="top">
-        <div className="eyebrow"><span className="pulse" /> Community quota monitor</div>
+        <div className="eyebrow">
+          <span className="pulse" /> Community quota monitor
+        </div>
         <h1>Know when Codex quotas reset early.</h1>
         <p className="heroCopy">
-          Community-driven tracker of Codex quota resets that happen before the expected renewal date. No official source covers this — so we do.
+          Community-driven tracker of Codex quota resets that happen before the expected renewal
+          date. No official source covers this — so we do.
         </p>
 
         <div className="latestCard">
@@ -152,12 +161,16 @@ export default function Home() {
             </div>
             <div>
               <span className="metaLabel">Reports</span>
-              <strong>{latest.reportCount} {latest.reportCount === 1 ? "report" : "reports"}</strong>
+              <strong>
+                {latest.reportCount} {latest.reportCount === 1 ? "report" : "reports"}
+              </strong>
             </div>
             <div>
               <span className="metaLabel">Source</span>
               {latest.sourceUrl ? (
-                <a href={latest.sourceUrl} target="_blank" rel="noreferrer">{latest.sourceName} ↗</a>
+                <a href={latest.sourceUrl} target="_blank" rel="noreferrer">
+                  {latest.sourceName} ↗
+                </a>
               ) : (
                 <strong>{latest.sourceName}</strong>
               )}
@@ -202,7 +215,9 @@ export default function Home() {
             <article className="eventCard" key={event.id}>
               <div className={`timelineDot ${event.status}`} aria-hidden="true" />
               <div className="eventTopline">
-                <time dateTime={event.occurredAt}>{dateFormatter.format(new Date(event.occurredAt))}</time>
+                <time dateTime={event.occurredAt}>
+                  {dateFormatter.format(new Date(event.occurredAt))}
+                </time>
                 <span className={`badge ${event.status}`}>{statusLabels[event.status]}</span>
               </div>
               <h3>{event.title}</h3>
@@ -212,9 +227,13 @@ export default function Home() {
                 {typeof event.daysEarly === "number" && (
                   <span className="daysEarly">{formatDaysEarly(event.daysEarly)}</span>
                 )}
-                <span className="reportCount">{event.reportCount} {event.reportCount === 1 ? "report" : "reports"}</span>
+                <span className="reportCount">
+                  {event.reportCount} {event.reportCount === 1 ? "report" : "reports"}
+                </span>
                 {event.sourceUrl ? (
-                  <a href={event.sourceUrl} target="_blank" rel="noreferrer">{event.sourceName} ↗</a>
+                  <a href={event.sourceUrl} target="_blank" rel="noreferrer">
+                    {event.sourceName} ↗
+                  </a>
                 ) : (
                   <span>{event.sourceName}</span>
                 )}
@@ -241,15 +260,26 @@ export default function Home() {
           <h2>Evidence before certainty.</h2>
         </div>
         <div className="methodGrid">
-          <div><span className="legend official" /> <strong>Official</strong><p>Confirmed by an OpenAI-controlled source.</p></div>
-          <div><span className="legend community" /> <strong>Community confirmed</strong><p>Several consistent reports, without an official announcement.</p></div>
-          <div><span className="legend suspected" /> <strong>Suspected</strong><p>Early evidence that still needs verification.</p></div>
+          <div>
+            <span className="legend official" /> <strong>Official</strong>
+            <p>Confirmed by an OpenAI-controlled source.</p>
+          </div>
+          <div>
+            <span className="legend community" /> <strong>Community confirmed</strong>
+            <p>Several consistent reports, without an official announcement.</p>
+          </div>
+          <div>
+            <span className="legend suspected" /> <strong>Suspected</strong>
+            <p>Early evidence that still needs verification.</p>
+          </div>
         </div>
       </section>
 
       <footer className="shell footer">
         <p>Independent community project. Not affiliated with OpenAI.</p>
-        <p>Feeds: <a href="/api/feed">JSON</a> · <a href="/api/feed/rss">RSS</a></p>
+        <p>
+          Feeds: <a href="/api/feed">JSON</a> · <a href="/api/feed/rss">RSS</a>
+        </p>
         <p className="footerUpdated">Updated {dateFormatter.format(new Date(lastUpdatedAt))}</p>
       </footer>
     </main>

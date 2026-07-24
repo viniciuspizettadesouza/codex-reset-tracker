@@ -6,12 +6,12 @@ authoritative signal is the personal monitor reading `/wham/usage` (see
 
 ## First-party (authoritative)
 
-| Source | Where | Notes |
-| --- | --- | --- |
-| Usage endpoint | `GET https://chatgpt.com/backend-api/wham/usage` | Backs the usage panel. Read by `scripts/monitor.mjs`. Auth: `Authorization: Bearer <access_token>` + `ChatGPT-Account-Id: <account_id>` from `~/.codex/auth.json`. |
-| Usage panel | https://chatgpt.com/codex/settings/usage | Most complete human view: weekly usage, next reset, other limits. |
-| Limit banner | In-app | e.g. "Your rate limit resets on Jul 23, 2026, 1:13 PM." |
-| Reset credits | `GET/POST https://chatgpt.com/backend-api/wham/rate-limit-reset-credits` | The official savable-reset feature (rolled out 2026-06-12). |
+| Source         | Where                                                                    | Notes                                                                                                                                                              |
+| -------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Usage endpoint | `GET https://chatgpt.com/backend-api/wham/usage`                         | Backs the usage panel. Read by `scripts/monitor.mjs`. Auth: `Authorization: Bearer <access_token>` + `ChatGPT-Account-Id: <account_id>` from `~/.codex/auth.json`. |
+| Usage panel    | https://chatgpt.com/codex/settings/usage                                 | Most complete human view: weekly usage, next reset, other limits.                                                                                                  |
+| Limit banner   | In-app                                                                   | e.g. "Your rate limit resets on Jul 23, 2026, 1:13 PM."                                                                                                            |
+| Reset credits  | `GET/POST https://chatgpt.com/backend-api/wham/rate-limit-reset-credits` | The official savable-reset feature (rolled out 2026-06-12).                                                                                                        |
 
 ## Announcements & incidents (corroboration)
 

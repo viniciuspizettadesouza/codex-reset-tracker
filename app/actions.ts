@@ -1,9 +1,7 @@
 "use server";
 
 export type ReportState =
-  | { status: "idle" }
-  | { status: "success" }
-  | { status: "error"; message: string };
+  { status: "idle" } | { status: "success" } | { status: "error"; message: string };
 
 function buildIssueBody(fields: {
   occurredAt: string;
@@ -41,16 +39,11 @@ function buildIssueBody(fields: {
 
 function parseUtc(value: string): Date {
   // Accept "YYYY-MM-DD HH:MM" or "YYYY-MM-DD"
-  const normalized = value.includes(" ")
-    ? value.replace(" ", "T") + ":00Z"
-    : value + "T00:00:00Z";
+  const normalized = value.includes(" ") ? value.replace(" ", "T") + ":00Z" : value + "T00:00:00Z";
   return new Date(normalized);
 }
 
-export async function submitReport(
-  _prev: ReportState,
-  formData: FormData,
-): Promise<ReportState> {
+export async function submitReport(_prev: ReportState, formData: FormData): Promise<ReportState> {
   // Honeypot — bots fill this hidden field, humans don't
   if (formData.get("website")) {
     return { status: "success" };

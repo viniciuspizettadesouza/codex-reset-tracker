@@ -1,11 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import {
-  upsertEvent,
-  deriveStatus,
-  computeDaysEarly,
-  isEarly,
-} from "../scripts/lib/events.mjs";
+import { upsertEvent, deriveStatus, computeDaysEarly, isEarly } from "../scripts/lib/events.mjs";
 
 const base = {
   scheduledAt: "2026-07-27T00:00:00Z",
@@ -48,9 +43,29 @@ test("upsertEvent adds a distinct event", () => {
 
 test("three reports about the same reset merge into one community event", () => {
   let events = [];
-  ({ events } = upsertEvent(events, { ...base, id: "a", occurredAt: "2026-07-22T02:00:00Z", affectedPlans: ["Plus"], sourceUrl: "u1" }));
-  ({ events } = upsertEvent(events, { ...base, id: "b", occurredAt: "2026-07-22T08:00:00Z", affectedPlans: ["Pro"], sourceName: "s2", sourceUrl: "u2" }));
-  ({ events } = upsertEvent(events, { ...base, id: "c", occurredAt: "2026-07-21T20:00:00Z", affectedPlans: ["Unknown"], sourceName: "s3", sourceUrl: "u3" }));
+  ({ events } = upsertEvent(events, {
+    ...base,
+    id: "a",
+    occurredAt: "2026-07-22T02:00:00Z",
+    affectedPlans: ["Plus"],
+    sourceUrl: "u1",
+  }));
+  ({ events } = upsertEvent(events, {
+    ...base,
+    id: "b",
+    occurredAt: "2026-07-22T08:00:00Z",
+    affectedPlans: ["Pro"],
+    sourceName: "s2",
+    sourceUrl: "u2",
+  }));
+  ({ events } = upsertEvent(events, {
+    ...base,
+    id: "c",
+    occurredAt: "2026-07-21T20:00:00Z",
+    affectedPlans: ["Unknown"],
+    sourceName: "s3",
+    sourceUrl: "u3",
+  }));
 
   assert.equal(events.length, 1);
   const e = events[0];
@@ -64,7 +79,12 @@ test("three reports about the same reset merge into one community event", () => 
 
 test("a distinct later reset stays separate", () => {
   let events = [];
-  ({ events } = upsertEvent(events, { ...base, id: "a", occurredAt: "2026-07-22T02:00:00Z", affectedPlans: ["Plus"] }));
+  ({ events } = upsertEvent(events, {
+    ...base,
+    id: "a",
+    occurredAt: "2026-07-22T02:00:00Z",
+    affectedPlans: ["Plus"],
+  }));
   ({ events } = upsertEvent(events, {
     ...base,
     id: "d",
@@ -77,7 +97,13 @@ test("a distinct later reset stays separate", () => {
 
 test("an official source promotes status, title and headline source", () => {
   let events = [];
-  ({ events } = upsertEvent(events, { ...base, id: "a", occurredAt: "2026-08-15T00:00:00Z", scheduledAt: "2026-08-20T00:00:00Z", affectedPlans: ["Plus"] }));
+  ({ events } = upsertEvent(events, {
+    ...base,
+    id: "a",
+    occurredAt: "2026-08-15T00:00:00Z",
+    scheduledAt: "2026-08-20T00:00:00Z",
+    affectedPlans: ["Plus"],
+  }));
   ({ events } = upsertEvent(events, {
     ...base,
     id: "off",
