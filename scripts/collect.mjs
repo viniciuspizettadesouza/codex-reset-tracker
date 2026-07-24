@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Autonomous event collector — runs via GitHub Actions every 4h.
- * Sources: Reddit RSS (no auth) + OpenAI Status API (no auth).
+ * Sources: Reddit RSS + OpenAI Status API + X API v2 (when TWITTER_BEARER_TOKEN is set).
  * No external dependencies. Node 18+ required (native fetch).
  *
  * Exit codes:
@@ -30,19 +30,27 @@ const KEYWORDS = [
 // r/codex is where early resets are usually reported first (often within minutes).
 const SUBREDDITS = ["codex", "ChatGPT", "OpenAI"];
 
+// X accounts whose timelines are always fetched in addition to keyword search.
+// Add handles here as new reliable sources are identified.
+const X_ACCOUNTS = ["thsottiaux"];
+
 // Posts within 6h of each other are considered the same event.
 const CLUSTER_WINDOW_MS = 6 * 60 * 60 * 1000;
 
-async function fetchWithRetry(url, options, retries = 2) {
+async function fetchWithRetry(url, options, retries = 2, timeoutMs = 10_000) {
   for (let i = 0; i <= retries; i++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const res = await fetch(url, options);
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timer);
       if (res.status === 429 && i < retries) {
         await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
         continue;
       }
       return res;
     } catch (err) {
+      clearTimeout(timer);
       if (i === retries) throw err;
       await new Promise((r) => setTimeout(r, 1000));
     }
@@ -137,6 +145,60 @@ async function fetchOpenAIStatus() {
   return incidents;
 }
 
+// Fetches relevant tweets via the X API v2 recent-search endpoint.
+// Skips silently when TWITTER_BEARER_TOKEN is not set — no config, no data.
+async function fetchXApi() {
+  const token = process.env.TWITTER_BEARER_TOKEN;
+  if (!token) {
+    console.log("X API: TWITTER_BEARER_TOKEN not set; skipping.");
+    return [];
+  }
+
+  const accountFilter = X_ACCOUNTS.map((a) => `from:${a}`).join(" OR ");
+  const keywordFilter = "codex quota reset OR codex limit reset OR codex rate limit reset";
+  const query = encodeURIComponent(
+    `(${keywordFilter} OR ${accountFilter}) -is:retweet lang:en`,
+  );
+  const url =
+    "https://api.twitter.com/2/tweets/search/recent" +
+    `?query=${query}&max_results=100&tweet.fields=created_at&expansions=author_id&user.fields=username`;
+
+  try {
+    const res = await fetchWithRetry(url, {
+      headers: { "User-Agent": USER_AGENT, Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      console.warn(`X API: HTTP ${res.status}`);
+      return [];
+    }
+    const json = await res.json();
+    const tweets = json?.data ?? [];
+    const usersById = Object.fromEntries(
+      (json?.includes?.users ?? []).map((u) => [u.id, u.username]),
+    );
+
+    const posts = tweets
+      .filter((t) => KEYWORDS.some((kw) => t.text.toLowerCase().includes(kw)))
+      .map((t) => {
+        const username = usersById[t.author_id] ?? "unknown";
+        return {
+          id: `x-${t.id}`,
+          createdAt: new Date(t.created_at).toISOString(),
+          title: t.text,
+          url: `https://x.com/${username}/status/${t.id}`,
+          sourcePlatform: "x",
+          xAccount: username,
+        };
+      });
+
+    console.log(`X API: ${tweets.length} tweets fetched, ${posts.length} relevant.`);
+    return posts;
+  } catch (err) {
+    console.warn("X API fetch failed:", err.message);
+    return [];
+  }
+}
+
 function clusterByWindow(posts) {
   const sorted = [...posts].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   const clusters = [];
@@ -157,12 +219,24 @@ function buildEvent(cluster) {
   const earliest = sorted[0];
   const isOfficial = cluster.some((p) => p.isOfficial);
   const status = deriveStatus(cluster.length, isOfficial);
-  const reportNoun = cluster.length === 1 ? "report" : "reports";
+  const noun = cluster.length === 1 ? "report" : "reports";
   const subs = [...new Set(cluster.map((p) => p.subreddit).filter(Boolean))];
+  const hasX = cluster.some((p) => p.sourcePlatform === "x");
+  const hasReddit = subs.length > 0;
 
+  let sourceName;
+  if (isOfficial) sourceName = "OpenAI Status";
+  else if (hasX && !hasReddit) sourceName = `${cluster.length} X (Twitter) ${noun}`;
+  else if (hasX) sourceName = `${cluster.length} ${noun} (Reddit + X)`;
+  else sourceName = `${cluster.length} Reddit ${noun}`;
+
+  const parts = [
+    ...(hasReddit ? [`r/${subs.join(", r/")}`] : []),
+    ...(hasX ? ["X (Twitter)"] : []),
+  ];
   const description = isOfficial
     ? earliest.title
-    : `${cluster.length} independent ${reportNoun} across r/${subs.join(", r/")} suggest a quota reset occurred around this time.`;
+    : `${cluster.length} independent ${noun} across ${parts.join(" and ")} suggest a quota reset occurred around this time.`;
 
   return {
     id: `auto-${earliest.createdAt.slice(0, 10)}-${earliest.id.slice(0, 6)}`,
@@ -176,22 +250,23 @@ function buildEvent(cluster) {
     title: isOfficial ? earliest.title : "Quota reset reported by community",
     affectedPlans: ["Unknown"],
     reportCount: cluster.length,
-    sourceName: isOfficial ? "OpenAI Status" : `${cluster.length} Reddit ${reportNoun}`,
+    sourceName,
     sourceUrl: isOfficial ? earliest.url : cluster[0].url,
     description,
   };
 }
 
 try {
-  console.log("Collecting from Reddit RSS and OpenAI Status…");
-  const [redditPosts, officialIncidents] = await Promise.all([
+  console.log("Collecting from Reddit RSS, OpenAI Status, and X API…");
+  const [redditPosts, officialIncidents, xPosts] = await Promise.all([
     fetchRedditRss(),
     fetchOpenAIStatus(),
+    fetchXApi(),
   ]);
 
-  console.log(`Total: ${redditPosts.length} Reddit posts, ${officialIncidents.length} official incidents.`);
+  console.log(`Total: ${redditPosts.length} Reddit posts, ${officialIncidents.length} official incidents, ${xPosts.length} X posts.`);
 
-  const allPosts = [...redditPosts, ...officialIncidents];
+  const allPosts = [...redditPosts, ...officialIncidents, ...xPosts];
   if (allPosts.length === 0) {
     console.log("Nothing new. Exiting with 0.");
     process.exit(0);

@@ -54,31 +54,41 @@ To run unattended, schedule the one-shot form with cron/launchd, or leave the
   JSON/RSS feed endpoints at `/api/feed` and `/api/feed/rss`, live 24h banner
   (color-coded by confidence, links to #history), and a custom favicon.
 
-## Backlog (in priority order)
+## Backlog
 
 1. **Lock the `/wham/usage` parser** to real field names (needs the `--raw` output).
    Replace the best-guess fixtures in `scripts/fixtures/` with a real snapshot.
-2. **X/@thsottiaux ingestion** — hard to automate (API/auth); keep as a manual
-   watch source unless a feasible feed is found.
 
-### Done
+2. **X API ingestion** — the collector is Reddit + OpenAI Status only.
 
-- Feed detected resets into the tracker — `monitor.mjs --emit-event`.
-- Offline testing — `--fixture` mode + `npm test`.
-- **Token refresh** — on 401 the monitor automatically refreshes using
-  `refresh_token` from `auth.json` (OpenAI OAuth token endpoint), writes the new
-  token back to disk, and retries. Falls back to `auth0.openai.com` for older CLI
-  versions.
-- **Alert channel improvements** — `notifyWebhook` now sends platform-native
-  payloads: Discord embeds, Slack blocks, Telegram native (requires
-  `CODEX_TELEGRAM_CHAT_ID`), or generic fallback. `--test-alert` flag for quick
-  verification.
-- **Website analytics** — stats row (4 tiles), `.daysEarly` styled as a green chip,
-  JSON feed at `/api/feed`, RSS 2.0 feed at `/api/feed/rss`, footer feed links.
-- **Website live banner** — full-width banner below the header when the most recent
-  event is within 24h; color-coded by confidence, links to #history.
-- **Favicon** — `app/icon.svg` using the "C" brand mark (green rounded square),
-  replaces the browser-cached dinosaur from a previous Docusaurus site.
+   To add X: create an app at [developer.x.com](https://developer.x.com) (free tier, read-only Bearer Token).
+   Add `TWITTER_BEARER_TOKEN` as a GitHub Actions secret, then expose it in the collect job:
+
+```yaml
+- name: Run collector
+  env:
+    TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+  run: node scripts/collect.mjs
+```
+
+   Add `fetchXApi()` to `scripts/collect.mjs` using `GET https://api.twitter.com/2/tweets/search/recent`,
+   params `tweet.fields=created_at&expansions=author_id&user.fields=username`, query:
+
+```text
+(codex quota reset OR codex limit reset OR from:thsottiaux) -is:retweet lang:en
+```
+
+   Map results to the same post shape as Reddit posts and feed into `clusterByWindow`.
+
+   **Accounts to watch** — add these to the `from:` filter in the query above:
+
+   | Handle        | Why                                                    |
+   |---------------|--------------------------------------------------------|
+   | `@thsottiaux` | Known to post early-reset observations with timestamps |
+
+   Expand this table as you spot other reliable signal sources on X.
+   Good places to look: search `codex quota reset` on X sorted by Latest,
+   check who replies first under OpenAI announcements about Codex.
 
 ## Gotchas
 
