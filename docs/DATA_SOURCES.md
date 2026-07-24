@@ -18,8 +18,10 @@ authoritative signal is the personal monitor reading `/wham/usage` (see
 - **@thsottiaux on X** — Thibault Sottiaux, Codex lead engineer. ⭐ Extraordinary
   global resets are usually announced here first ("I have reset Codex rate limits
   for ALL paid plans…"). No official reset changelog exists, so this is the
-  closest thing to an announcement channel. Automating X is hard (needs API/auth);
-  treat as a manual watch source for now.
+  closest thing to an announcement channel. Polled by `scripts/collect.mjs` via
+  the X API v2 recent-search endpoint when `TWITTER_BEARER_TOKEN` is set (see the
+  [README](../README.md#enable-x-api-ingestion) to enable it); skipped silently
+  otherwise.
 - **OpenAI Status** — https://status.openai.com — incident-linked resets appear
   here. Example incident (usage depleting faster than expected):
   https://status.openai.com/incidents/01KW2E6W0503W4NXJNCVAG8V6T

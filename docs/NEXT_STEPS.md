@@ -43,12 +43,13 @@ To run unattended, schedule the one-shot form with cron/launchd, or leave the
   refill, jitter (ignored), and reset-time-moved-earlier heads-up.
 - **`scripts/lib/events.mjs`** — shared `upsertEvent` merge; independent reports
   about the same reset merge and raise confidence (suspected→community→official).
-- **`scripts/collect.mjs`** — polls Reddit (r/codex, r/ChatGPT, r/OpenAI) + OpenAI
-  Status every 4h; feeds events through `upsertEvent`.
+- **`scripts/collect.mjs`** — polls Reddit (r/codex, r/ChatGPT, r/OpenAI), OpenAI
+  Status, and the X API (when `TWITTER_BEARER_TOKEN` is set) every 4h; feeds
+  events through `upsertEvent`.
 - **`scripts/issue-to-event.mjs`** + website form — community reports; both reject
   non-early resets (require `occurredAt < scheduledAt`).
 - **`scripts/fixtures/`** + **`test/`** — best-guess usage fixtures and a `npm test`
-  suite (15 tests) covering the detection + merge logic.
+  suite (30 tests) covering the detection, merge, and collector logic.
 - **Website** (`app/`) — timeline of events with confidence + "days early" chip,
   stats row (total events, avg days early, most-affected plan, resets in 30 days),
   JSON/RSS feed endpoints at `/api/feed` and `/api/feed/rss`, live 24h banner
@@ -59,36 +60,18 @@ To run unattended, schedule the one-shot form with cron/launchd, or leave the
 1. **Lock the `/wham/usage` parser** to real field names (needs the `--raw` output).
    Replace the best-guess fixtures in `scripts/fixtures/` with a real snapshot.
 
-2. **X API ingestion** — the collector is Reddit + OpenAI Status only.
+2. **Enable X API ingestion** (code is done — this is an operator/setup step, no
+   machine login needed). `scripts/collect.mjs` already has `fetchXApi()` and the
+   collect workflow already passes the secret; it just needs the token:
+   create a free read-only app at [developer.x.com](https://developer.x.com), then
+   add its Bearer Token as the `TWITTER_BEARER_TOKEN` GitHub Actions secret. Full
+   steps in the [README](../README.md#enable-x-api-ingestion). Until the secret is
+   present the collector skips X silently.
 
-   To add X: create an app at [developer.x.com](https://developer.x.com) (free tier, read-only Bearer Token).
-   Add `TWITTER_BEARER_TOKEN` as a GitHub Actions secret, then expose it in the collect job:
-
-```yaml
-- name: Run collector
-  env:
-    TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
-  run: node scripts/collect.mjs
-```
-
-   Add `fetchXApi()` to `scripts/collect.mjs` using `GET https://api.twitter.com/2/tweets/search/recent`,
-   params `tweet.fields=created_at&expansions=author_id&user.fields=username`, query:
-
-```text
-(codex quota reset OR codex limit reset OR from:thsottiaux) -is:retweet lang:en
-```
-
-   Map results to the same post shape as Reddit posts and feed into `clusterByWindow`.
-
-   **Accounts to watch** — add these to the `from:` filter in the query above:
-
-   | Handle        | Why                                                    |
-   |---------------|--------------------------------------------------------|
-   | `@thsottiaux` | Known to post early-reset observations with timestamps |
-
-   Expand this table as you spot other reliable signal sources on X.
-   Good places to look: search `codex quota reset` on X sorted by Latest,
-   check who replies first under OpenAI announcements about Codex.
+   **Accounts watched** (`X_ACCOUNTS` in `collect.mjs`): `@thsottiaux` — posts
+   early-reset observations with timestamps. Expand as you spot other reliable
+   signal sources: search `codex quota reset` on X sorted by Latest, and check who
+   replies first under OpenAI announcements about Codex.
 
 ## Gotchas
 
