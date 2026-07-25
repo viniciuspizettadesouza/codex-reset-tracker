@@ -8,32 +8,25 @@ architecture.
 
 1. Keep Neon Postgres as the selected database. Re-check the current Vercel
    Hobby and Neon Free limits before provisioning.
-2. Add the pre-deployment free-tier safeguards:
-   - replace per-request database reads with on-demand page revalidation after
-     successful ingest, plus a 15-minute fallback;
-   - aggregate/downsample chart history in SQL instead of returning every
-     15-minute snapshot to the page;
-   - add tests proving cached public reads still show new snapshots and stale
-     state correctly.
-3. Create the Neon project on the Free plan without adding a payment method or
+2. Create the Neon project on the Free plan without adding a payment method or
    enabling a paid/usage-based plan. Choose a region close to the Vercel
    functions.
-4. Apply
+3. Apply
    `db/migrations/001_live_quota.sql`.
-5. Configure `DATABASE_URL` and `MONITOR_INGEST_TOKEN` in Vercel.
-6. Generate a long random ingest token; never commit it or reuse Codex
+4. Configure `DATABASE_URL` and `MONITOR_INGEST_TOKEN` in Vercel.
+5. Generate a long random ingest token; never commit it or reuse Codex
    credentials.
-7. Deploy the Next.js app to Vercel Hobby.
-8. Configure the local machine with `CODEX_INGEST_URL` and
+6. Deploy the Next.js app to Vercel Hobby.
+7. Configure the local machine with `CODEX_INGEST_URL` and
    `CODEX_INGEST_TOKEN`.
-9. Run an end-to-end test with anonymized fixtures before sending real data.
-10. Run the monitor unattended every 15 minutes using systemd/cron or:
+8. Run an end-to-end test with anonymized fixtures before sending real data.
+9. Run the monitor unattended every 15 minutes using systemd/cron or:
 
-    ```bash
-    npm run monitor -- --watch --interval 900
-    ```
+   ```bash
+   npm run monitor -- --watch --interval 900
+   ```
 
-11. Confirm that:
+10. Confirm that:
 
 - live snapshots and detected resets reach Neon;
 - the dashboard updates without exposing private fields;
@@ -42,10 +35,10 @@ architecture.
 - turning off the monitor leaves the website online but marks it stale after
   30 minutes.
 
-12. Review Neon storage, compute-hour, and network-transfer usage after the
+11. Review Neon storage, compute-hour, and network-transfer usage after the
     first day and weekly thereafter. Do not upgrade automatically if a limit is
     approached; optimize or reduce database reads first.
-13. Create a weekly `pg_dump` of the sanitized database to private local
+12. Create a weekly `pg_dump` of the sanitized database to private local
     storage and verify that it can be restored. Never include the Neon
     connection string or ingest token in the backup.
 

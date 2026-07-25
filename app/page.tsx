@@ -1,10 +1,9 @@
 import resetData from "@/data/resets.json";
 import LiveQuotaPanel from "@/app/components/LiveQuotaPanel";
 import ReportForm from "@/app/components/ReportForm";
-import { getLiveQuotaData } from "@/app/lib/live-quota-store";
+import { getCachedLiveQuotaData } from "@/app/lib/live-quota-cache";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 type Plan = "Free" | "Plus" | "Pro" | "Team" | "Enterprise" | "Unknown";
 
@@ -66,7 +65,7 @@ function countRecentEvents(events: ResetEvent[]): number {
 }
 
 export default async function Home() {
-  const liveQuotaData = await getLiveQuotaData();
+  const liveQuotaData = await getCachedLiveQuotaData();
   const generatedAt = new Date().toISOString();
   const events = [...resetEvents].sort(
     (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),

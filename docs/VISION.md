@@ -92,11 +92,12 @@ month, comfortably within the expected free-tier scale of this personal,
 non-commercial project. Free-plan limits can change and should be checked again
 before production setup.
 
-Neon Free meters active compute, so public dashboard reads must not query the
-database on every page view. Production should use on-demand revalidation after
-successful ingest with a 15-minute fallback, query an aggregated/downsampled
-history, monitor compute usage, and keep a restorable local database export.
-The project must remain on plans that cannot create an unexpected bill.
+Neon Free meters active compute, so public dashboard reads do not query the
+database on every page view. The server caches sanitized query results for 15
+minutes and expires that cache after a newly inserted snapshot. History is
+aggregated/downsampled in PostgreSQL while always retaining detected reset
+points. Operations must monitor compute usage, keep a restorable local database
+export, and remain on plans that cannot create an unexpected bill.
 
 ## Why early resets happen (context)
 

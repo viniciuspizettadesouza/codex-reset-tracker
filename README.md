@@ -117,11 +117,12 @@ configured database or first snapshot, it renders a safe waiting state and
 leaves the community timeline available.
 
 Neon Postgres Free is the selected database because it integrates cleanly with
-Vercel and keeps the data portable through standard PostgreSQL tools. Before
-production deployment, add on-demand page revalidation after ingest, a
-15-minute fallback, SQL history downsampling, compute-usage monitoring, and a
-weekly `pg_dump`. Provision the Free plan without a payment method or automatic
-paid upgrades; see [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
+Vercel and keeps the data portable through standard PostgreSQL tools. Sanitized
+query results are cached for 15 minutes and invalidated after a newly inserted
+snapshot. Chart history is downsampled in SQL while preserving every detected
+reset. Provision the Free plan without a payment method or automatic paid
+upgrades, monitor compute usage, and keep a weekly `pg_dump`; see
+[docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
 
 ### Apply the live quota migration
 

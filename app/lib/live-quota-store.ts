@@ -20,14 +20,66 @@ export async function getLiveQuotaData(): Promise<LiveQuotaData> {
     const sql = neon(databaseUrl);
     const [snapshotRows, resetRows] = await Promise.all([
       sql`
+        WITH recent AS (
+          SELECT
+            observed_at,
+            used_percent,
+            reset_at,
+            window_seconds,
+            reset_detected
+          FROM quota_snapshots
+          WHERE observed_at >= NOW() - INTERVAL '90 days'
+        ),
+        tagged AS (
+          SELECT
+            recent.*,
+            CASE
+              WHEN observed_at >= NOW() - INTERVAL '7 days' THEN 1
+              WHEN observed_at >= NOW() - INTERVAL '30 days' THEN 2
+              ELSE 3
+            END AS resolution,
+            date_bin(
+              CASE
+                WHEN observed_at >= NOW() - INTERVAL '7 days'
+                  THEN INTERVAL '1 hour'
+                WHEN observed_at >= NOW() - INTERVAL '30 days'
+                  THEN INTERVAL '4 hours'
+                ELSE INTERVAL '12 hours'
+              END,
+              observed_at,
+              TIMESTAMPTZ '2000-01-01 00:00:00+00'
+            ) AS bucket
+          FROM recent
+        ),
+        sampled AS (
+          SELECT DISTINCT ON (resolution, bucket)
+            observed_at,
+            used_percent,
+            reset_at,
+            window_seconds,
+            reset_detected
+          FROM tagged
+          ORDER BY resolution, bucket, observed_at DESC
+        ),
+        combined AS (
+          SELECT * FROM sampled
+          UNION
+          SELECT
+            observed_at,
+            used_percent,
+            reset_at,
+            window_seconds,
+            reset_detected
+          FROM recent
+          WHERE reset_detected
+        )
         SELECT
           observed_at,
           used_percent,
           reset_at,
           window_seconds,
           reset_detected
-        FROM quota_snapshots
-        WHERE observed_at >= NOW() - INTERVAL '90 days'
+        FROM combined
         ORDER BY observed_at ASC
       `,
       sql`
