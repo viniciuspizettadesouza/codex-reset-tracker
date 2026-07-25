@@ -76,7 +76,9 @@ Local detection state                    Neon Postgres
   dedicated ingest secret. It never receives `auth.json`, access/refresh tokens,
   email, `user_id`, or `account_id`.
 - **Hosted database:** stores sanitized snapshots and detected reset events.
-  Initial target: Neon Postgres Free with a 90-day snapshot retention policy.
+  Neon Postgres Free is the selected provider, with a 90-day snapshot retention
+  policy. PostgreSQL keeps the data portable through standard
+  `pg_dump`/`pg_restore` tooling if the hosting provider changes.
 - **Online dashboard:** runs continuously on Vercel Hobby, reads the latest
   snapshot dynamically, and shows remaining quota, reset time, last update,
   stale/offline state, and recent history.
@@ -89,6 +91,12 @@ At a 15-minute polling interval the monitor sends about 2,880 snapshots per
 month, comfortably within the expected free-tier scale of this personal,
 non-commercial project. Free-plan limits can change and should be checked again
 before production setup.
+
+Neon Free meters active compute, so public dashboard reads must not query the
+database on every page view. Production should use on-demand revalidation after
+successful ingest with a 15-minute fallback, query an aggregated/downsampled
+history, monitor compute usage, and keep a restorable local database export.
+The project must remain on plans that cannot create an unexpected bill.
 
 ## Why early resets happen (context)
 

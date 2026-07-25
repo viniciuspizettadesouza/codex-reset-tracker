@@ -110,11 +110,18 @@ The hosted API must never receive `auth.json`, access/refresh tokens, email,
 `user_id`, or `account_id`. See [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) for the
 implementation phases and [docs/VISION.md](docs/VISION.md) for the architecture.
 
-The home page reads Neon on the server without caching. It shows remaining and
-used quota, the scheduled reset in the viewer's timezone, the last monitor
-update, an explicit stale state after 30 minutes, and selectable 7/30/90-day
-history. Without a configured database or first snapshot, it renders a safe
-waiting state and leaves the community timeline available.
+The home page reads Neon on the server. It shows remaining and used quota, the
+scheduled reset in the viewer's timezone, the last monitor update, an explicit
+stale state after 30 minutes, and selectable 7/30/90-day history. Without a
+configured database or first snapshot, it renders a safe waiting state and
+leaves the community timeline available.
+
+Neon Postgres Free is the selected database because it integrates cleanly with
+Vercel and keeps the data portable through standard PostgreSQL tools. Before
+production deployment, add on-demand page revalidation after ingest, a
+15-minute fallback, SQL history downsampling, compute-usage monitoring, and a
+weekly `pg_dump`. Provision the Free plan without a payment method or automatic
+paid upgrades; see [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
 
 ### Apply the live quota migration
 
