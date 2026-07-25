@@ -6,22 +6,16 @@ architecture.
 
 ## ▶️ Immediate next milestone: Phase 4 — deploy and operate
 
-1. Configure `MONITOR_INGEST_TOKEN` in the Vercel production environment.
-   `DATABASE_URL` is already provided by the Neon integration.
-2. Generate a long random ingest token; never commit it or reuse Codex
-   credentials.
-3. Redeploy the Next.js app on Vercel Hobby so the production deployment
-   receives all configured environment variables.
-4. Configure the local machine with `CODEX_INGEST_URL` and
+1. Configure the local machine with `CODEX_INGEST_URL` and
    `CODEX_INGEST_TOKEN`.
-5. Run an end-to-end test with anonymized fixtures before sending real data.
-6. Run the monitor unattended every 15 minutes using systemd/cron or:
+2. Run the monitor unattended every 15 minutes using the documented systemd
+   user service, cron, or:
 
    ```bash
    npm run monitor -- --watch --interval 900
    ```
 
-7. Confirm that:
+3. Confirm that:
 
 - live snapshots and detected resets reach Neon;
 - the dashboard updates without exposing private fields;
@@ -30,10 +24,10 @@ architecture.
 - turning off the monitor leaves the website online but marks it stale after
   30 minutes.
 
-8. Review Neon storage, compute-hour, and network-transfer usage after the
+4. Review Neon storage, compute-hour, and network-transfer usage after the
     first day and weekly thereafter. Do not upgrade automatically if a limit is
     approached; optimize or reduce database reads first.
-9. Create a weekly `pg_dump` of the sanitized database to private local
+5. Create a weekly `pg_dump` of the sanitized database to private local
     storage and verify that it can be restored. Never include the Neon
     connection string or ingest token in the backup.
 

@@ -1,0 +1,22 @@
+[Unit]
+Description=Codex weekly quota monitor
+Documentation=https://github.com/viniciuspizettadesouza/codex-reset-tracker
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@REPOSITORY_PATH@
+EnvironmentFile=%h/.config/codex-reset-tracker/monitor.env
+ExecStart=@NPM_PATH@ run monitor -- --watch --interval 900
+Restart=on-failure
+RestartSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.codex-reset-tracker
+
+[Install]
+WantedBy=default.target

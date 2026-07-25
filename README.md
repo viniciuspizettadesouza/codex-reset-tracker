@@ -75,6 +75,46 @@ On macOS, alerts also fire as native desktop notifications. To run unattended,
 schedule the single-poll form with cron or launchd, or leave `--watch` running on
 an always-on host.
 
+### Run unattended on Linux with systemd
+
+The repository includes a hardened systemd user-service template. Run these
+commands from the repository root. The token prompt is hidden, and the secret
+is written only to a local file readable by your user:
+
+```bash
+install -d -m 700 "$HOME/.config/codex-reset-tracker" "$HOME/.codex-reset-tracker"
+read -rsp "Ingestion token: " CODEX_INGEST_TOKEN; echo
+umask 077
+printf 'CODEX_INGEST_URL=%s\nCODEX_INGEST_TOKEN=%s\n' \
+  'https://codex-reset-tracker.vercel.app/api/monitor' \
+  "$CODEX_INGEST_TOKEN" > "$HOME/.config/codex-reset-tracker/monitor.env"
+unset CODEX_INGEST_TOKEN
+
+install -d -m 700 "$HOME/.config/systemd/user"
+tracker_repository="$(pwd -P)"
+npm_path="$(command -v npm)"
+sed \
+  -e "s|@REPOSITORY_PATH@|$tracker_repository|g" \
+  -e "s|@NPM_PATH@|$npm_path|g" \
+  ops/systemd/codex-reset-tracker.service.template \
+  > "$HOME/.config/systemd/user/codex-reset-tracker.service"
+
+systemctl --user daemon-reload
+systemctl --user enable --now codex-reset-tracker.service
+systemctl --user status codex-reset-tracker.service
+```
+
+Inspect recent output without printing either credential:
+
+```bash
+journalctl --user -u codex-reset-tracker.service -n 50 --no-pager
+```
+
+After changing the token or URL in `monitor.env`, restart the service with
+`systemctl --user restart codex-reset-tracker.service`. Never commit that
+environment file. To keep the user service running after logout, enable user
+lingering with `loginctl enable-linger "$USER"` if the machine permits it.
+
 Each successful poll prints both quota representations, for example
 `69% remaining (31% used)`. When hosted publishing is configured, failed uploads
 do not interrupt local detection: sanitized payloads are queued in the local
