@@ -97,9 +97,9 @@ Run the unit tests for the detection and merge logic with `npm test`.
 > `rate_limit.primary_window` / `secondary_window`, `used_percent`,
 > `limit_window_seconds`, `reset_after_seconds`, and Unix-seconds `reset_at`.
 
-## Planned hosted live dashboard
+## Hosted live dashboard
 
-The next milestone keeps Codex authentication on the personal machine while
+The hosted pipeline keeps Codex authentication on the personal machine while
 publishing only sanitized quota values to the always-online website:
 
 ```text
@@ -109,6 +109,12 @@ local monitor → authenticated Vercel API → Neon Postgres → live dashboard
 The hosted API must never receive `auth.json`, access/refresh tokens, email,
 `user_id`, or `account_id`. See [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) for the
 implementation phases and [docs/VISION.md](docs/VISION.md) for the architecture.
+
+The home page reads Neon on the server without caching. It shows remaining and
+used quota, the scheduled reset in the viewer's timezone, the last monitor
+update, an explicit stale state after 30 minutes, and selectable 7/30/90-day
+history. Without a configured database or first snapshot, it renders a safe
+waiting state and leaves the community timeline available.
 
 ### Apply the live quota migration
 

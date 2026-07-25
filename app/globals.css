@@ -319,11 +319,317 @@ h1 {
   font-weight: 600;
 }
 
-/* ─── Latest card ─────────────────────────────────────────── */
-.latestSection {
+/* ─── Live quota ──────────────────────────────────────────── */
+.liveQuotaSection {
   position: relative;
   z-index: 2;
   margin-top: -56px;
+}
+
+.liveQuotaCard,
+.liveQuotaEmpty {
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
+}
+
+.liveQuotaCard {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.85fr) minmax(0, 1.15fr);
+  overflow: hidden;
+}
+
+.liveQuotaCard.stale {
+  border-color: rgba(212, 164, 62, 0.34);
+}
+
+.liveQuotaSummary,
+.liveQuotaHistory {
+  padding: 36px;
+}
+
+.liveQuotaSummary {
+  border-right: 1px solid var(--border);
+}
+
+.liveQuotaHeading,
+.historyControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.liveQuotaHeading h2 {
+  margin-bottom: 0;
+}
+
+.liveStateBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 5px 11px;
+  border-radius: var(--radius-status);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.liveStateBadge span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.liveStateBadge.current {
+  color: var(--official);
+  background: var(--official-soft);
+}
+
+.liveStateBadge.current span {
+  background: var(--official);
+  box-shadow: 0 0 0 3px rgba(67, 201, 139, 0.15);
+}
+
+.liveStateBadge.stale {
+  color: var(--community);
+  background: var(--community-soft);
+}
+
+.liveStateBadge.stale span {
+  background: var(--community);
+}
+
+.liveStateBadge.empty {
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.liveQuotaPrimary {
+  display: grid;
+  grid-template-columns: 154px 1fr;
+  gap: 30px;
+  align-items: center;
+  margin-top: 28px;
+}
+
+.quotaRing {
+  width: 154px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--brand) var(--quota-angle),
+    rgba(255, 255, 255, 0.08) 0
+  );
+  position: relative;
+}
+
+.quotaRing::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: inherit;
+  background: var(--panel);
+}
+
+.quotaRing > div {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.quotaRing strong {
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
+}
+
+.quotaRing span {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.liveQuotaFacts {
+  display: grid;
+  gap: 15px;
+}
+
+.liveQuotaFacts > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.liveQuotaFacts span,
+.liveQuotaFacts small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.liveQuotaFacts strong {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.liveQuotaNotice,
+.liveQuotaResetNote {
+  margin: 24px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  font-size: 12px;
+}
+
+.liveQuotaNotice {
+  color: #efd08c;
+  background: var(--community-soft);
+  border: 1px solid rgba(212, 164, 62, 0.2);
+}
+
+.liveQuotaResetNote {
+  display: flex;
+  gap: 9px;
+  color: var(--brand-text);
+  background: var(--brand-soft);
+}
+
+.liveQuotaHistory {
+  min-width: 0;
+  background: var(--surface);
+}
+
+.historyControls strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.rangePicker {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+}
+
+.rangePicker button {
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rangePicker button[aria-pressed="true"] {
+  background: var(--brand-soft);
+  color: var(--brand-text);
+}
+
+.quotaChart {
+  display: block;
+  width: 100%;
+  min-height: 190px;
+  margin-top: 22px;
+  overflow: visible;
+}
+
+.quotaChartGrid {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
+.quotaChartLabel {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.quotaChartLine {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.quotaChartPoint {
+  fill: var(--brand);
+}
+
+.quotaChartReset {
+  fill: var(--official);
+  stroke: var(--surface);
+  stroke-width: 3;
+}
+
+.quotaChartEmpty {
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+  margin-top: 22px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-control);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.chartLegend {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.chartLegendLine {
+  width: 18px;
+  height: 2px;
+  background: var(--brand);
+}
+
+.chartLegendReset {
+  width: 8px;
+  height: 8px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: var(--official);
+}
+
+.liveQuotaEmpty {
+  min-height: 220px;
+  padding: 36px 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 36px;
+}
+
+.liveQuotaEmpty h2 {
+  margin-bottom: 0;
+}
+
+.liveQuotaEmpty > p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* ─── Latest card ─────────────────────────────────────────── */
+.latestSection {
+  margin-top: 72px;
 }
 
 .latestCard {
@@ -724,12 +1030,16 @@ code {
 
 /* ─── Shared card hover ───────────────────────────────────── */
 .latestCard,
+.liveQuotaCard,
+.liveQuotaEmpty,
 .statTile,
 .eventCard,
 .methodology {
   transition: border-color var(--duration-card);
 }
 .latestCard:hover,
+.liveQuotaCard:hover,
+.liveQuotaEmpty:hover,
 .statTile:hover,
 .eventCard:hover,
 .methodology:hover {
@@ -767,7 +1077,36 @@ code {
     font-size: 9px;
   }
   .latestSection {
+    margin-top: 48px;
+  }
+  .liveQuotaSection {
     margin-top: -36px;
+  }
+  .liveQuotaCard,
+  .liveQuotaEmpty {
+    grid-template-columns: 1fr;
+  }
+  .liveQuotaSummary {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .liveQuotaSummary,
+  .liveQuotaHistory,
+  .liveQuotaEmpty {
+    padding: 24px;
+  }
+  .liveQuotaEmpty {
+    gap: 20px;
+  }
+  .liveQuotaPrimary {
+    grid-template-columns: 120px 1fr;
+    gap: 22px;
+  }
+  .quotaRing {
+    width: 120px;
+  }
+  .quotaRing strong {
+    font-size: 28px;
   }
   .latestCard,
   .methodology {

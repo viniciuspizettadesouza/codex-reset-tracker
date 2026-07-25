@@ -1,5 +1,10 @@
 import resetData from "@/data/resets.json";
+import LiveQuotaPanel from "@/app/components/LiveQuotaPanel";
 import ReportForm from "@/app/components/ReportForm";
+import { getLiveQuotaData } from "@/app/lib/live-quota-store";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type Plan = "Free" | "Plus" | "Pro" | "Team" | "Enterprise" | "Unknown";
 
@@ -60,7 +65,9 @@ function countRecentEvents(events: ResetEvent[]): number {
   return events.filter((e) => new Date(e.occurredAt) >= cutoff).length;
 }
 
-export default function Home() {
+export default async function Home() {
+  const liveQuotaData = await getLiveQuotaData();
+  const generatedAt = new Date().toISOString();
   const events = [...resetEvents].sort(
     (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
   );
@@ -102,6 +109,9 @@ export default function Home() {
             <span>Codex Reset Tracker</span>
           </a>
           <nav className="headerNav">
+            <a className="headerLink" href="#live-quota">
+              Live quota
+            </a>
             <a className="headerLink" href="#history">
               History
             </a>
@@ -143,8 +153,8 @@ export default function Home() {
             OpenAI Codex sometimes resets usage limits early. This tracker shows you exactly when, so
             you stop refreshing and start coding.
           </p>
-          <a className="heroAction" href="#latest">
-            View latest reset <span aria-hidden="true">↓</span>
+          <a className="heroAction" href="#live-quota">
+            View live quota <span aria-hidden="true">↓</span>
           </a>
           <div className="heroTerminal" aria-hidden="true">
             <span>weekly_limit</span>
@@ -161,6 +171,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <LiveQuotaPanel data={liveQuotaData} generatedAt={generatedAt} />
 
       <section className="shell latestSection" id="latest">
         <div className="latestCard">

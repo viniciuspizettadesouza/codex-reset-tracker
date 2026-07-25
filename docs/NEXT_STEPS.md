@@ -4,23 +4,7 @@ Goal: **tell the user the moment their Codex weekly quota resets, especially
 when it resets early.** See [VISION.md](VISION.md) for the product and trust-zone
 architecture.
 
-## ▶️ Immediate next milestone: Phase 3 — live website
-
-1. Add server-side Neon queries for the latest snapshot and recent history.
-2. Add a prominent live quota card with:
-   - remaining and used percentages;
-   - scheduled reset in the viewer's timezone;
-   - `lastSeenAt`;
-   - an explicit stale/offline state when no snapshot arrives for 30 minutes.
-3. Add a small 7/30/90-day history chart and highlight detected resets.
-4. Keep `data/resets.json` as the source for the existing community timeline.
-5. Keep public responses sanitized and disable caching or use a short,
-   intentional revalidation interval.
-6. Add tests for empty, current, stale, and reset-event states.
-7. Run `npm test`, `npm run lint`, `npm run build`, and
-   `npm audit --omit=dev`.
-
-## Phase 4 — deploy and operate
+## ▶️ Immediate next milestone: Phase 4 — deploy and operate
 
 1. Re-check the current Vercel Hobby and Neon Free limits before provisioning.
 2. Create the Neon Free project and apply
