@@ -78,7 +78,9 @@ Local detection state                    Neon Postgres
 - **Hosted database:** stores sanitized snapshots and detected reset events.
   Neon Postgres Free is the selected provider, with a 90-day snapshot retention
   policy. PostgreSQL keeps the data portable through standard
-  `pg_dump`/`pg_restore` tooling if the hosting provider changes.
+  `pg_dump`/`pg_restore` tooling if the hosting provider changes. Direct database
+  maintenance, private backups, and restore verification follow the procedures
+  in [OPERATIONS.md](OPERATIONS.md).
 - **Online dashboard:** runs continuously on Vercel Hobby, reads the latest
   snapshot dynamically, and shows remaining quota, reset time, last update,
   stale/offline state, and recent history.

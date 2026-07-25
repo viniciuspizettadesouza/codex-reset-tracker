@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the sanitized Codex quota backup weekly
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+RandomizedDelaySec=1h
+Unit=codex-reset-tracker-backup.service
+
+[Install]
+WantedBy=timers.target

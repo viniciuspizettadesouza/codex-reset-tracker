@@ -162,7 +162,8 @@ local monitor → authenticated Vercel API → Neon Postgres → live dashboard
 
 The hosted API must never receive `auth.json`, access/refresh tokens, email,
 `user_id`, or `account_id`. See [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) for the
-implementation phases and [docs/VISION.md](docs/VISION.md) for the architecture.
+implementation phases, [docs/VISION.md](docs/VISION.md) for the architecture,
+and [docs/OPERATIONS.md](docs/OPERATIONS.md) for the production runbook.
 
 The home page reads Neon on the server. It shows remaining and used quota, the
 scheduled reset in the viewer's timezone, the last monitor update, an explicit
@@ -203,6 +204,75 @@ Unknown fields are rejected so credentials and account identifiers cannot cross
 the local-to-hosted trust boundary. `remainingPercent` is always derived from
 `usedPercent`; it is never accepted as input or stored. Snapshots older than 90
 days are pruned during ingest, while their sanitized reset events are retained.
+
+### Back up the sanitized database
+
+Install PostgreSQL client tools with the same major version as the Neon
+database. In the Neon SQL editor, run `SHOW server_version;` to confirm the
+required version. Use the unpooled connection string for backups.
+
+Store that connection string in a dedicated local file. Enter it only at the
+hidden prompt; never paste it into chat, commit it, or reuse the ingest token:
+
+```bash
+install -d -m 700 \
+  "$HOME/.config/codex-reset-tracker" \
+  "$HOME/.codex-reset-tracker/backups"
+read -rsp "Neon unpooled database URL: " BACKUP_DATABASE_URL; echo
+umask 077
+printf 'BACKUP_DATABASE_URL=%s\n' "$BACKUP_DATABASE_URL" \
+  > "$HOME/.config/codex-reset-tracker/backup.env"
+unset BACKUP_DATABASE_URL
+```
+
+Create and structurally validate a private custom-format backup:
+
+```bash
+BACKUP_DATABASE_URL="$(
+  sed -n 's/^BACKUP_DATABASE_URL=//p' \
+    "$HOME/.config/codex-reset-tracker/backup.env"
+)"
+export BACKUP_DATABASE_URL
+npm run backup:db
+unset BACKUP_DATABASE_URL
+```
+
+The script includes only `quota_snapshots` and `reset_events`, writes with mode
+`0600` under `~/.codex-reset-tracker/backups`, and never places the connection
+string in the archive.
+
+To schedule it weekly, install the hardened user units:
+
+```bash
+tracker_repository="$(pwd -P)"
+sed "s|@REPOSITORY_PATH@|$tracker_repository|g" \
+  ops/systemd/codex-reset-tracker-backup.service.template \
+  > "$HOME/.config/systemd/user/codex-reset-tracker-backup.service"
+install -m 600 \
+  ops/systemd/codex-reset-tracker-backup.timer \
+  "$HOME/.config/systemd/user/codex-reset-tracker-backup.timer"
+
+systemctl --user daemon-reload
+systemctl --user enable --now codex-reset-tracker-backup.timer
+systemctl --user list-timers codex-reset-tracker-backup.timer --no-pager
+```
+
+For a real restore test, create an empty disposable Neon database named
+`codex_reset_tracker_restore_<suffix>` and get its unpooled connection string.
+The verification script refuses any database with another name or any existing
+table:
+
+```bash
+read -rsp "Disposable restore database URL: " RESTORE_DATABASE_URL; echo
+export RESTORE_DATABASE_URL
+npm run backup:verify -- "$HOME/.codex-reset-tracker/backups/<backup>.dump"
+unset RESTORE_DATABASE_URL
+```
+
+Delete the disposable database after verification. Do not point the restore
+script at production. The complete direct-connection, systemd, restore,
+rotation, restart, and troubleshooting procedures are documented in
+[docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 ## Autonomous collector (GitHub Actions)
 

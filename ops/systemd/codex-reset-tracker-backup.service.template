@@ -1,0 +1,17 @@
+[Unit]
+Description=Back up sanitized Codex quota data
+Documentation=https://github.com/viniciuspizettadesouza/codex-reset-tracker
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=@REPOSITORY_PATH@
+EnvironmentFile=%h/.config/codex-reset-tracker/backup.env
+ExecStart=@REPOSITORY_PATH@/scripts/backup-db.sh
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.codex-reset-tracker/backups

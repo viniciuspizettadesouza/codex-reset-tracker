@@ -2,23 +2,57 @@
 
 Goal: **tell the user the moment their Codex weekly quota resets, especially
 when it resets early.** See [VISION.md](VISION.md) for the product and trust-zone
-architecture.
+architecture and [OPERATIONS.md](OPERATIONS.md) for the production runbook and
+completed verification record.
 
 ## ▶️ Immediate next milestone: Phase 4 — deploy and operate
 
-1. Review Neon storage, compute-hour, and network-transfer usage after the
-   first day and weekly thereafter. Do not upgrade automatically if a limit is
-   approached; optimize or reduce database reads first.
-2. Create a weekly `pg_dump` of the sanitized database to private local storage
-   and verify that it can be restored. Never include the Neon connection string
-   or ingest token in the backup.
+1. Establish the first 24-hour Neon Free baseline:
+   - record storage, active compute time, network transfer, and branch count;
+   - confirm that the production compute still autosuspends after five minutes;
+   - inspect query frequency and check for unexpected long-running queries;
+   - record the dated results in [OPERATIONS.md](OPERATIONS.md), without
+     connection strings, role names, project identifiers, or other secrets.
+2. If the baseline projects close to a free-plan limit, optimize in this order:
+   - verify that public dashboard reads are using the 15-minute server cache;
+   - increase the public cache duration;
+   - reduce history resolution or shorten the displayed history;
+   - reduce hosted snapshot publishing frequency while keeping authoritative
+     local polling at 15 minutes;
+   - only reconsider providers after measuring the effect. Do not add billing
+     or enable automatic upgrades.
+3. Verify the first naturally scheduled weekly backup:
+   - confirm the timer fired and the oneshot service succeeded;
+   - confirm that a new custom-format dump exists with mode `600`;
+   - inspect its catalog without printing the database connection;
+   - keep the already tested restore procedure as the recovery check.
+4. Observe the next complete Codex weekly-reset cycle end to end. Confirm that
+   local detection, sanitized ingest, dashboard history, and any official
+   corroboration agree. Do not manufacture another production reset event for
+   this check.
+
+## Next functional milestone: Phase 5 — deliver the alert
+
+1. Choose a free notification destination supported by the existing monitor
+   (for example ntfy, Discord, Telegram, or Slack) and store its webhook only in
+   the private local monitor environment.
+2. Run `npm run monitor -- --test-alert` and confirm that the notification
+   reaches the intended device without exposing quota authentication or account
+   identifiers.
+3. Restart `codex-reset-tracker.service`, confirm it receives the webhook
+   setting, and document the provider-neutral setup in
+   [OPERATIONS.md](OPERATIONS.md). Do not commit the webhook URL.
+4. Confirm delivery on the next real reset. Keep the local state and dashboard
+   authoritative if notification delivery fails.
 
 ## Later backlog
 
-Keep X API ingestion disabled while it requires paid credits. Re-check pricing
-periodically; only add `TWITTER_BEARER_TOKEN` with an explicit spending decision
-and strict cap. Expand `X_ACCOUNTS` if other reliable early-reset sources are
-identified.
+- Add a backup-retention policy only after measuring local storage growth.
+  Preserve enough generations to recover from delayed corruption.
+- Keep X API ingestion disabled while it requires paid credits. Re-check pricing
+  periodically; only add `TWITTER_BEARER_TOKEN` with an explicit spending
+  decision and strict cap. Expand `X_ACCOUNTS` if other reliable early-reset
+  sources are identified.
 
 ## Constraints for all remaining work
 

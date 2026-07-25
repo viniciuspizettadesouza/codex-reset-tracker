@@ -10,6 +10,8 @@
     "monitor": "node scripts/monitor.mjs",
     "monitor:raw": "node scripts/monitor.mjs --raw",
     "monitor:fixture": "node scripts/monitor.mjs --fixture scripts/fixtures/usage-weekly-low.json",
+    "backup:db": "bash scripts/backup-db.sh",
+    "backup:verify": "bash scripts/verify-db-restore.sh",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
