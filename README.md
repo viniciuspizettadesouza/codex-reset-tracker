@@ -9,8 +9,8 @@ the project, and [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for the data sourc
 On the machine where you're logged into the Codex CLI:
 
 ```bash
-node scripts/monitor.mjs --raw    # confirm auth + capture the real usage payload
-node scripts/monitor.mjs          # one poll: detect a reset and alert you
+npm run monitor:raw    # confirm auth + capture the real usage payload
+npm run monitor        # one poll: show quota, detect a reset, and publish if configured
 ```
 
 Details and unattended scheduling are under
@@ -34,13 +34,19 @@ where you're logged into the Codex CLI. See [docs/VISION.md](docs/VISION.md) for
 
 ```bash
 # 1. First, capture the exact usage payload shape (also confirms auth works):
-node scripts/monitor.mjs --raw
+npm run monitor:raw
 
 # 2. Run a single poll (detects + alerts, then exits):
-node scripts/monitor.mjs
+npm run monitor
 
 # 3. Or keep watching every 15 minutes:
-node scripts/monitor.mjs --watch --interval 900
+npm run monitor -- --watch --interval 900
+
+# Check the real quota without publishing:
+env -u CODEX_INGEST_URL -u CODEX_INGEST_TOKEN npm run monitor
+
+# Run safely with an anonymized offline fixture:
+npm run monitor:fixture
 ```
 
 Configuration via environment variables (all optional):
