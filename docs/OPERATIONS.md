@@ -243,6 +243,63 @@ minutes. The public page stayed online, changed to `Monitor offline`, displayed
 the stale-data warning, and recovered after the service restarted and published
 the next snapshot.
 
+## Telegram notifications
+
+Telegram is the selected reset-notification channel. The bot is created through
+the official `@BotFather`, and the intended user must open the new bot and send
+`/start` before the bot can send messages to that private chat.
+
+The Telegram Bot API `getUpdates` method can then identify the private
+`message.chat.id`. Do not paste the API response into chat or documentation
+because it can contain Telegram profile and message metadata.
+
+Store these settings only in
+`~/.config/codex-reset-tracker/monitor.env`:
+
+```dotenv
+CODEX_WEBHOOK_URL=https://api.telegram.org/bot<bot-token>/sendMessage
+CODEX_TELEGRAM_CHAT_ID=<private-chat-id>
+```
+
+The bot token is embedded in the API URL and grants control of the bot. Never
+commit, log, screenshot, or share either real value. Keep the environment file
+private:
+
+```bash
+chmod 600 "$HOME/.config/codex-reset-tracker/monitor.env"
+stat -c '%a %n' "$HOME/.config/codex-reset-tracker/monitor.env"
+```
+
+Test the notification inside a subshell so the sourced secrets do not remain in
+the interactive shell:
+
+```bash
+(
+  set -a
+  source "$HOME/.config/codex-reset-tracker/monitor.env"
+  set +a
+  npm run monitor -- --test-alert
+)
+```
+
+After a successful delivery, restart the monitor and verify its sanitized
+status:
+
+```bash
+systemctl --user restart codex-reset-tracker.service
+systemctl --user is-active codex-reset-tracker.service
+journalctl --user -u codex-reset-tracker.service -n 10 --no-pager
+```
+
+Telegram receives only the alert title and message: quota percentages, reset
+timing, and whether the reset was early. It never receives Codex authentication,
+account identifiers, the raw usage payload, the Neon connection, or the ingest
+token.
+
+The first Telegram test notification was delivered successfully on 2026-07-25.
+The monitor service was then restarted and verified `enabled` and `active`.
+Delivery on the next real reset remains the end-to-end notification check.
+
 ## Secret rotation
 
 To rotate the ingest token, update the same value in Vercel Production and
@@ -256,8 +313,34 @@ To rotate Neon credentials, replace only `BACKUP_DATABASE_URL` in `backup.env`,
 confirm mode `600`, and run an immediate backup through the oneshot service.
 Vercel-managed application variables may require a production redeployment.
 
+To rotate the Telegram bot token, regenerate it through the official
+`@BotFather`, replace only the token portion of `CODEX_WEBHOOK_URL`, run the test
+alert again, and restart the monitor. The previous token must no longer be used.
+
 Never reuse the Codex access token, refresh token, or ingest token as a database
 credential.
+
+## Public repository security
+
+The source repository is public at
+`https://github.com/viniciuspizettadesouza/codex-reset-tracker`.
+
+Before publication on 2026-07-25:
+
+- an MIT license and private vulnerability-reporting policy were added;
+- the production Neon project name was generalized in public documentation;
+- all 31 commits were rewritten to use the GitHub noreply author address;
+- every commit on the rewritten default branch was scanned for high-confidence
+  credential formats and sensitive filenames;
+- the rewritten tree passed tests, lint, production build, and `npm audit`;
+- the history was force-pushed while the repository was still private;
+- GitHub Secret Scanning, Push Protection, and Private Vulnerability Reporting
+  were enabled before considering publication complete.
+
+A mode-`600` recovery bundle of the pre-publication history is stored privately
+under `~/.codex-reset-tracker/history-backups/`. It contains the former commit
+metadata and must never be committed, uploaded, or shared. Any old clone created
+before the rewrite must be replaced rather than pushed.
 
 ## Neon free-tier review
 
@@ -290,7 +373,12 @@ Completed on 2026-07-25:
 - A real disposable-database restore succeeded.
 - The disposable restore database was deleted.
 - The weekly backup timer was enabled and verified active.
+- The repository was published with sanitized history and GitHub security
+  protections enabled.
+- A Telegram test alert reached the intended private chat.
+- The continuous monitor restarted with Telegram configured and remained active.
 
 Still pending:
 
 - review Neon free-tier usage after the first full day and weekly thereafter.
+- confirm Telegram delivery on the next real reset.

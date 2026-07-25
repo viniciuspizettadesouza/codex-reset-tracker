@@ -31,19 +31,11 @@ completed verification record.
    corroboration agree. Do not manufacture another production reset event for
    this check.
 
-## Next functional milestone: Phase 5 — deliver the alert
+## Next functional milestone: Phase 5 — confirm live alert delivery
 
-1. Choose a free notification destination supported by the existing monitor
-   (for example ntfy, Discord, Telegram, or Slack) and store its webhook only in
-   the private local monitor environment.
-2. Run `npm run monitor -- --test-alert` and confirm that the notification
-   reaches the intended device without exposing quota authentication or account
-   identifiers.
-3. Restart `codex-reset-tracker.service`, confirm it receives the webhook
-   setting, and document the provider-neutral setup in
-   [OPERATIONS.md](OPERATIONS.md). Do not commit the webhook URL.
-4. Confirm delivery on the next real reset. Keep the local state and dashboard
-   authoritative if notification delivery fails.
+1. Confirm Telegram delivery on the next real reset. Verify that the message,
+   local detection, sanitized ingest, and dashboard event agree. Keep the local
+   state and dashboard authoritative if notification delivery fails.
 
 ## Later backlog
 
