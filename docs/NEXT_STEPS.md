@@ -8,7 +8,6 @@ architecture.
 
 1. Confirm the remaining production behaviors:
 
-- the first genuine detected reset reaches Neon and appears on the dashboard;
 - snapshots older than 90 days are pruned;
 - a controlled monitor pause leaves the website online but marks the quota
   snapshot stale after 30 minutes.
