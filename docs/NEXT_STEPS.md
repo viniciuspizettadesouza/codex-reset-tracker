@@ -6,17 +6,12 @@ architecture.
 
 ## ▶️ Immediate next milestone: Phase 4 — deploy and operate
 
-1. Confirm the remaining production behaviors:
-
-- a controlled monitor pause leaves the website online but marks the quota
-  snapshot stale after 30 minutes.
-
-2. Review Neon storage, compute-hour, and network-transfer usage after the
-    first day and weekly thereafter. Do not upgrade automatically if a limit is
-    approached; optimize or reduce database reads first.
-3. Create a weekly `pg_dump` of the sanitized database to private local
-    storage and verify that it can be restored. Never include the Neon
-    connection string or ingest token in the backup.
+1. Review Neon storage, compute-hour, and network-transfer usage after the
+   first day and weekly thereafter. Do not upgrade automatically if a limit is
+   approached; optimize or reduce database reads first.
+2. Create a weekly `pg_dump` of the sanitized database to private local storage
+   and verify that it can be restored. Never include the Neon connection string
+   or ingest token in the backup.
 
 ## Later backlog
 
