@@ -95,6 +95,32 @@ The hosted API must never receive `auth.json`, access/refresh tokens, email,
 `user_id`, or `account_id`. See [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) for the
 implementation phases and [docs/VISION.md](docs/VISION.md) for the architecture.
 
+### Apply the live quota migration
+
+Set `DATABASE_URL` to a Neon Postgres connection string and apply
+`db/migrations/001_live_quota.sql` with the Neon SQL editor or `psql`. Then set
+`MONITOR_INGEST_TOKEN` to a random secret of at least 32 characters.
+
+`POST /api/monitor` accepts a strict version 1 JSON payload:
+
+```json
+{
+  "version": 1,
+  "observedAt": "2026-07-25T10:00:00.000Z",
+  "usedPercent": 31,
+  "resetAt": "2026-08-01T10:00:00.000Z",
+  "windowSeconds": 604800,
+  "resetDetected": false
+}
+```
+
+Authenticate with `Authorization: Bearer <MONITOR_INGEST_TOKEN>`. For detected
+resets, `resetDetected` is `true` and a matching `resetEvent` object is required.
+Unknown fields are rejected so credentials and account identifiers cannot cross
+the local-to-hosted trust boundary. `remainingPercent` is always derived from
+`usedPercent`; it is never accepted as input or stored. Snapshots older than 90
+days are pruned during ingest, while their sanitized reset events are retained.
+
 ## Autonomous collector (GitHub Actions)
 
 `scripts/collect.mjs` runs every 4 hours via `.github/workflows/collect.yml`,

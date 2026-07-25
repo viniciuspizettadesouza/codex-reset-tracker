@@ -12,16 +12,21 @@
     "test": "node --test"
   },
   "dependencies": {
-    "next": "16.2.10",
+    "@neondatabase/serverless": "1.1.0",
+    "next": "16.2.11",
     "react": "19.2.0",
     "react-dom": "19.2.0"
+  },
+  "overrides": {
+    "postcss": "8.5.23",
+    "sharp": "0.35.3"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "16.2.10",
+    "eslint-config-next": "16.2.11",
     "prettier": "^3.9.6",
     "typescript": "^5.9.0"
   }
