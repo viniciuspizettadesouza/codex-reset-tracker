@@ -348,3 +348,8 @@ vercel --prod
 npm run build
 npm start
 ```
+
+## License
+
+This project is available under the [MIT License](LICENSE). Security issues
+should be reported privately according to [SECURITY.md](SECURITY.md).

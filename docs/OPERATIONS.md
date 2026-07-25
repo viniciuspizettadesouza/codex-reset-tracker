@@ -39,7 +39,7 @@ maintenance uses a separate direct, or unpooled, connection because
 
 To obtain the direct connection:
 
-1. Open the `codex-tracker-db` project in Neon.
+1. Open the production database project in Neon.
 2. Select the `main` branch.
 3. Select the production database and owner role.
 4. Click **Connect** in the upper-left project navigation.
