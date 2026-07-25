@@ -92,10 +92,10 @@ unset CODEX_INGEST_TOKEN
 
 install -d -m 700 "$HOME/.config/systemd/user"
 tracker_repository="$(pwd -P)"
-npm_path="$(command -v npm)"
+node_path="$(command -v node)"
 sed \
   -e "s|@REPOSITORY_PATH@|$tracker_repository|g" \
-  -e "s|@NPM_PATH@|$npm_path|g" \
+  -e "s|@NODE_PATH@|$node_path|g" \
   ops/systemd/codex-reset-tracker.service.template \
   > "$HOME/.config/systemd/user/codex-reset-tracker.service"
 
@@ -114,6 +114,20 @@ After changing the token or URL in `monitor.env`, restart the service with
 `systemctl --user restart codex-reset-tracker.service`. Never commit that
 environment file. To keep the user service running after logout, enable user
 lingering with `loginctl enable-linger "$USER"` if the machine permits it.
+
+On WSL, Windows does not necessarily start the Linux distribution at login,
+and systemd services do not keep a WSL instance alive. After restarting
+Windows, launch the distribution once and verify the monitor:
+
+```bash
+systemctl --user is-active codex-reset-tracker.service
+journalctl --user -u codex-reset-tracker.service -n 10 --no-pager
+```
+
+If the service is not active, start it with
+`systemctl --user start codex-reset-tracker.service`. Use Windows Task
+Scheduler to launch the WSL distribution at login when fully automatic Windows
+startup is required.
 
 Each successful poll prints both quota representations, for example
 `69% remaining (31% used)`. When hosted publishing is configured, failed uploads

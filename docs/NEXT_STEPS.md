@@ -6,28 +6,17 @@ architecture.
 
 ## ▶️ Immediate next milestone: Phase 4 — deploy and operate
 
-1. Configure the local machine with `CODEX_INGEST_URL` and
-   `CODEX_INGEST_TOKEN`.
-2. Run the monitor unattended every 15 minutes using the documented systemd
-   user service, cron, or:
+1. Confirm the remaining production behaviors:
 
-   ```bash
-   npm run monitor -- --watch --interval 900
-   ```
-
-3. Confirm that:
-
-- live snapshots and detected resets reach Neon;
-- the dashboard updates without exposing private fields;
-- duplicate uploads do not create duplicate rows;
+- the first genuine detected reset reaches Neon and appears on the dashboard;
 - snapshots older than 90 days are pruned;
-- turning off the monitor leaves the website online but marks it stale after
-  30 minutes.
+- a controlled monitor pause leaves the website online but marks the quota
+  snapshot stale after 30 minutes.
 
-4. Review Neon storage, compute-hour, and network-transfer usage after the
+2. Review Neon storage, compute-hour, and network-transfer usage after the
     first day and weekly thereafter. Do not upgrade automatically if a limit is
     approached; optimize or reduce database reads first.
-5. Create a weekly `pg_dump` of the sanitized database to private local
+3. Create a weekly `pg_dump` of the sanitized database to private local
     storage and verify that it can be restored. Never include the Neon
     connection string or ingest token in the backup.
 
