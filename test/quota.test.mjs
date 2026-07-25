@@ -9,17 +9,51 @@ import {
 
 const NOW = Date.parse("2026-07-24T12:00:00Z");
 
-test("parseUsage handles the primary/secondary shape", () => {
+test("parseUsage handles the live rate_limit primary_window shape", () => {
   const w = parseUsage(
     {
-      primary: { used_percent: 40, window_minutes: 300, resets_in_seconds: 3600 },
-      secondary: { used_percent: 96, window_minutes: 10080, resets_in_seconds: 259200 },
+      rate_limit: {
+        allowed: true,
+        limit_reached: false,
+        primary_window: {
+          used_percent: 30,
+          limit_window_seconds: 604800,
+          reset_after_seconds: 304108,
+          reset_at: 1785283041,
+        },
+        secondary_window: null,
+      },
     },
     NOW,
   );
+  assert.deepEqual(w.weekly, {
+    usedPercent: 30,
+    resetsAt: "2026-07-28T23:57:21.000Z",
+    windowMinutes: 10080,
+  });
+});
+
+test("parseUsage handles both live windows when secondary_window is present", () => {
+  const w = parseUsage(
+    {
+      rate_limit: {
+        primary_window: {
+          used_percent: 40,
+          limit_window_seconds: 18000,
+          reset_after_seconds: 3600,
+        },
+        secondary_window: {
+          used_percent: 96,
+          limit_window_seconds: 604800,
+          reset_after_seconds: 259200,
+        },
+      },
+    },
+    NOW,
+  );
+  assert.equal(w["5h"].usedPercent, 40);
   assert.equal(w.weekly.usedPercent, 96);
   assert.equal(w.weekly.resetsAt, "2026-07-27T12:00:00.000Z");
-  assert.equal(w["5h"].usedPercent, 40);
 });
 
 test("parseUsage handles an array of windows", () => {
@@ -37,6 +71,11 @@ test("extractWindow prefers absolute reset over relative", () => {
     NOW,
   );
   assert.equal(win.resetsAt, "2026-08-01T00:00:00Z");
+});
+
+test("extractWindow accepts an absolute Unix timestamp in milliseconds", () => {
+  const win = extractWindow({ used_percent: 5, reset_at: Date.parse("2026-08-01T00:00:00Z") }, NOW);
+  assert.equal(win.resetsAt, "2026-08-01T00:00:00.000Z");
 });
 
 test("detects an early refill with hours-early", () => {

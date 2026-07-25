@@ -5,31 +5,29 @@ re-deriving context. Goal: **tell the user the moment their Codex weekly quota
 resets, especially when it resets early.** See [VISION.md](VISION.md) for the why
 and [DATA_SOURCES.md](DATA_SOURCES.md) for the source landscape.
 
-## ▶️ Immediate next action (do this first)
+## ✅ Completed on the personal machine
 
-Run the personal monitor on the machine where you're logged into the Codex CLI
-(your personal machine — Codex is **not** on the dev machine this repo was built on):
+The real payload was captured with:
 
 ```bash
-# Confirms auth works AND prints the real /wham/usage JSON:
 node scripts/monitor.mjs --raw
 ```
 
-Then **paste that JSON back** so the parser in `scripts/lib/quota.mjs` can be
-locked to the exact field names (`used_percent`, `resets_at` / `resets_in_seconds`,
-`window_minutes`, and how the primary/secondary windows are nested). Right now the
-parser is defensive/best-effort because the payload shape is unconfirmed.
+The confirmed shape is `rate_limit.primary_window` / `secondary_window`, with
+`used_percent`, `limit_window_seconds`, `reset_after_seconds`, and a Unix-seconds
+`reset_at`. The parser and anonymized fixtures now use that contract. The first
+normal poll also succeeded and established the local baseline.
 
-Once confirmed, run it for real:
+## ▶️ Immediate next action
+
+Run the monitor unattended. Either leave watch mode running:
 
 ```bash
-node scripts/monitor.mjs                      # one poll, detect + alert, exit
 node scripts/monitor.mjs --watch --interval 900   # keep watching every 15 min
 ```
 
-To run unattended, schedule the one-shot form with cron/launchd, or leave the
-`--watch` form running on an always-on host. Full options are in the
-[README](../README.md#personal-quota-monitor).
+Or schedule `node scripts/monitor.mjs` with cron/launchd on an always-on host.
+Full options are in the [README](../README.md#personal-quota-monitor).
 
 ## Current state (what works)
 
@@ -48,8 +46,8 @@ To run unattended, schedule the one-shot form with cron/launchd, or leave the
   events through `upsertEvent`.
 - **`scripts/issue-to-event.mjs`** + website form — community reports; both reject
   non-early resets (require `occurredAt < scheduledAt`).
-- **`scripts/fixtures/`** + **`test/`** — best-guess usage fixtures and a `npm test`
-  suite (30 tests) covering the detection, merge, and collector logic.
+- **`scripts/fixtures/`** + **`test/`** — anonymized real-schema fixtures and an `npm test`
+  suite (32 tests) covering the detection, merge, and collector logic.
 - **Website** (`app/`) — timeline of events with confidence + "days early" chip,
   stats row (total events, avg days early, most-affected plan, resets in 30 days),
   JSON/RSS feed endpoints at `/api/feed` and `/api/feed/rss`, live 24h banner
@@ -57,10 +55,7 @@ To run unattended, schedule the one-shot form with cron/launchd, or leave the
 
 ## Backlog
 
-1. **Lock the `/wham/usage` parser** to real field names (needs the `--raw` output).
-   Replace the best-guess fixtures in `scripts/fixtures/` with a real snapshot.
-
-2. **Enable X API ingestion** (code is done — this is an operator/setup step, no
+1. **Enable X API ingestion** (code is done — this is an operator/setup step, no
    machine login needed). `scripts/collect.mjs` already has `fetchXApi()` and the
    collect workflow already passes the secret; it just needs the token:
    create a free read-only app at [developer.x.com](https://developer.x.com), then

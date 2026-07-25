@@ -1,11 +1,9 @@
 /**
  * Pure helpers for reading Codex quota state and detecting resets.
  *
- * The exact JSON shape of https://chatgpt.com/backend-api/wham/usage is not
- * publicly documented, so parsing is defensive: it accepts several plausible
- * key names and both absolute (`resets_at`) and relative (`resets_in_seconds`)
- * reset fields. Run the monitor with `--raw` once to capture the real payload
- * and tighten these if needed.
+ * The observed https://chatgpt.com/backend-api/wham/usage shape is
+ * `{ rate_limit: { primary_window, secondary_window } }`. Parsing remains
+ * backward-compatible with older fixtures and plausible API variants.
  */
 
 const PERCENT_KEYS = ["used_percent", "usage_percent", "percent_used", "percent"];
@@ -17,6 +15,7 @@ const RESET_IN_KEYS = [
   "reset_in_seconds",
 ];
 const WINDOW_MIN_KEYS = ["window_minutes", "window_size_minutes", "window_size_in_minutes"];
+const WINDOW_SEC_KEYS = ["limit_window_seconds", "window_seconds", "window_size_seconds"];
 
 function firstNumber(obj, keys) {
   for (const k of keys) {
@@ -34,13 +33,27 @@ function firstString(obj, keys) {
   return null;
 }
 
+function absoluteResetAt(win) {
+  const value = firstString(win, RESET_AT_KEYS) ?? firstNumber(win, RESET_AT_KEYS);
+  if (typeof value === "string") return value;
+  if (typeof value === "number") {
+    // The live endpoint returns Unix seconds. Accept milliseconds too so a
+    // future API change does not silently produce a date in 1970.
+    const timestampMs = value < 1_000_000_000_000 ? value * 1000 : value;
+    return new Date(timestampMs).toISOString();
+  }
+  return null;
+}
+
 /** Turn one window-like object into { usedPercent, resetsAt, windowMinutes }. */
 export function extractWindow(win, now = Date.now()) {
   if (!win || typeof win !== "object") return null;
   const usedPercent = firstNumber(win, PERCENT_KEYS);
-  const windowMinutes = firstNumber(win, WINDOW_MIN_KEYS);
+  const windowSeconds = firstNumber(win, WINDOW_SEC_KEYS);
+  const windowMinutes =
+    firstNumber(win, WINDOW_MIN_KEYS) ?? (windowSeconds == null ? null : windowSeconds / 60);
 
-  let resetsAt = firstString(win, RESET_AT_KEYS);
+  let resetsAt = absoluteResetAt(win);
   if (!resetsAt) {
     const secs = firstNumber(win, RESET_IN_KEYS);
     if (secs != null) resetsAt = new Date(now + secs * 1000).toISOString();
@@ -58,15 +71,25 @@ function labelFor(win, fallback) {
 
 /**
  * Normalize a /wham/usage payload into { weekly, "5h", ...others } windows.
- * Recognizes { primary, secondary }, { rate_limits: {...} }, and arrays.
+ * Recognizes the live `{ rate_limit: { primary_window, secondary_window } }`
+ * contract, the older `{ primary, secondary }` shape, and arrays.
  */
 export function parseUsage(json, now = Date.now()) {
   const out = {};
   if (!json || typeof json !== "object") return out;
 
-  const container = json.rate_limits ?? json.usage ?? json;
+  const container = json.rate_limit ?? json.rate_limits ?? json.usage ?? json;
 
-  // Shape A: { primary: {...}, secondary: {...} } (Codex's known naming)
+  // Live shape captured in July 2026.
+  if (container.primary_window || container.secondary_window) {
+    const primary = extractWindow(container.primary_window, now);
+    const secondary = extractWindow(container.secondary_window, now);
+    if (primary) out[labelFor(primary, "primary")] = primary;
+    if (secondary) out[labelFor(secondary, "secondary")] = secondary;
+    if (Object.keys(out).length) return out;
+  }
+
+  // Backward-compatible shape used by early monitor fixtures.
   if (container.primary || container.secondary) {
     const primary = extractWindow(container.primary, now);
     const secondary = extractWindow(container.secondary, now);

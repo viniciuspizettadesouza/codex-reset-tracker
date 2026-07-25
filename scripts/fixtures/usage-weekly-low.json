@@ -1,13 +1,14 @@
 {
-  "_comment": "BEST-GUESS shape of GET /wham/usage. Replace with a real --raw payload once captured. Snapshot 1: weekly quota nearly exhausted, scheduled to reset in ~3 days.",
-  "primary": {
-    "used_percent": 40,
-    "window_minutes": 300,
-    "resets_in_seconds": 3600
-  },
-  "secondary": {
-    "used_percent": 96,
-    "window_minutes": 10080,
-    "resets_in_seconds": 259200
+  "_comment": "Schema captured from a real GET /wham/usage response; personal fields are omitted and scenario values are synthetic. Snapshot 1: weekly quota nearly exhausted, scheduled to reset in ~3 days.",
+  "rate_limit": {
+    "allowed": true,
+    "limit_reached": false,
+    "primary_window": {
+      "used_percent": 96,
+      "limit_window_seconds": 604800,
+      "reset_after_seconds": 259200,
+      "reset_at": 1785384000
+    },
+    "secondary_window": null
   }
 }
