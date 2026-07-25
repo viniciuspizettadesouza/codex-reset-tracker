@@ -77,9 +77,23 @@ CODEX_MONITOR_STATE=$S CODEX_PLAN=Plus node scripts/monitor.mjs --fixture script
 
 Run the unit tests for the detection and merge logic with `npm test`.
 
-> The `/wham/usage` JSON shape is not publicly documented; the fixtures in
-> `scripts/fixtures/` are a best guess. Once you run `--raw` on your real account,
-> share the output and we'll lock `scripts/lib/quota.mjs` to the actual field names.
+> The `/wham/usage` JSON shape is not publicly documented. The parser and
+> anonymized fixtures are aligned with a real payload captured in July 2026:
+> `rate_limit.primary_window` / `secondary_window`, `used_percent`,
+> `limit_window_seconds`, `reset_after_seconds`, and Unix-seconds `reset_at`.
+
+## Planned hosted live dashboard
+
+The next milestone keeps Codex authentication on the personal machine while
+publishing only sanitized quota values to the always-online website:
+
+```text
+local monitor → authenticated Vercel API → Neon Postgres → live dashboard
+```
+
+The hosted API must never receive `auth.json`, access/refresh tokens, email,
+`user_id`, or `account_id`. See [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) for the
+implementation phases and [docs/VISION.md](docs/VISION.md) for the architecture.
 
 ## Autonomous collector (GitHub Actions)
 

@@ -23,6 +23,8 @@ Concretely, a monitor that:
    (and by how much).
 4. Keeps a personal history so I can see whether early resets are a pattern for
    my account, how early they tend to be, and whether it's worth waiting.
+5. Publishes sanitized quota snapshots to an always-online dashboard without
+   exposing Codex credentials or account identifiers.
 
 ## The data source — this is the point
 
@@ -33,8 +35,10 @@ authoritative source is **Codex itself**.
 The monitor reads the quota the same way the Codex client does:
 
 - **Endpoint:** `GET https://chatgpt.com/backend-api/wham/usage` — returns the
-  current rate-limit windows (the 5-hour "primary" and the weekly "secondary")
-  with percent used and reset timing.
+  current rate-limit windows with percent used and reset timing. The observed
+  payload uses `rate_limit.primary_window` / `secondary_window`; the weekly
+  window is identified by its seven-day `limit_window_seconds`, not by assuming
+  that "primary" or "secondary" always means a particular duration.
 - **Auth:** `Authorization: Bearer <access_token>` + `ChatGPT-Account-Id: <account_id>`,
   both read from the `auth.json` that the Codex CLI writes at login
   (`$CODEX_HOME/auth.json`, default `~/.codex/auth.json`).
@@ -52,6 +56,39 @@ machine, or a small always-on host I've run `codex login` on once — on a sched
 (cron / launchd) or in a `--watch` loop. When it detects a reset it notifies me
 via console, a webhook (Discord / Slack / ntfy / Telegram bot), and a native
 desktop notification.
+
+The product is split into two trust zones:
+
+```text
+Personal machine                   Public cloud
+Codex CLI auth                     Vercel-hosted Next.js app
+      ↓                                      ↓
+Local monitor ── sanitized POST ──→ authenticated ingest API
+      ↓                                      ↓
+Local detection state                    Neon Postgres
+                                             ↓
+                                      Online dashboard
+```
+
+- **Local monitor:** owns Codex authentication, polls `/wham/usage`, keeps the
+  previous snapshot needed for reset detection, and remains authoritative.
+- **Hosted API:** accepts a small versioned payload authenticated with a
+  dedicated ingest secret. It never receives `auth.json`, access/refresh tokens,
+  email, `user_id`, or `account_id`.
+- **Hosted database:** stores sanitized snapshots and detected reset events.
+  Initial target: Neon Postgres Free with a 90-day snapshot retention policy.
+- **Online dashboard:** runs continuously on Vercel Hobby, reads the latest
+  snapshot dynamically, and shows remaining quota, reset time, last update,
+  stale/offline state, and recent history.
+
+The existing `data/resets.json` community timeline remains in place during the
+first hosted-data milestone. Moving that timeline into Postgres can happen
+later, after the personal live dashboard is working end to end.
+
+At a 15-minute polling interval the monitor sends about 2,880 snapshots per
+month, comfortably within the expected free-tier scale of this personal,
+non-commercial project. Free-plan limits can change and should be checked again
+before production setup.
 
 ## Why early resets happen (context)
 
@@ -99,16 +136,29 @@ extraordinary resets. Reference links are collected in [DATA_SOURCES.md](DATA_SO
 
 ## Where the community tracker fits
 
-The public tracker (this repo's website) becomes the **second phase**, not a
-prerequisite. Once the personal monitor is proven, detected early resets can be
-contributed — anonymized — to the shared timeline, and other users' reports merge
-in to raise confidence. The value still grows with data, but the project now
-delivers something useful with a single account on day one.
+The public tracker (this repo's website) has two related views:
+
+1. A live, sanitized view of the monitored account's quota and recent history.
+2. A community timeline where anonymized early-reset events and independent
+   reports merge to raise confidence.
+
+The live view is the next implementation milestone. The community timeline
+already exists and can continue using `data/resets.json` until a later database
+migration.
 
 ## Known caveats
 
 - **One account, one machine.** The monitor needs valid Codex credentials on the
   host it runs on; it cannot see accounts it isn't logged into.
+- **Public quota visibility.** The first dashboard is public by design and must
+  contain only the explicitly sanitized fields. If exact personal quota usage
+  should become private, add viewer authentication before publishing it.
+- **Monitor availability.** The hosted page stays online when the personal
+  machine is off, but its data stops changing. The UI must display `lastSeenAt`
+  and clearly mark data stale after a configurable threshold.
+- **Ingest authentication.** `MONITOR_INGEST_TOKEN` is separate from Codex auth,
+  stored only in the local monitor environment and Vercel environment variables,
+  and must be rotatable without changing Codex credentials.
 - **Token expiry.** `auth.json`'s access token expires periodically. The monitor
   attempts an automatic refresh using the `refresh_token` from `auth.json` before
   giving up; if refresh fails, it reports a clear error and asks you to run
@@ -124,5 +174,6 @@ delivers something useful with a single account on day one.
 ## What this project is not
 
 - Not a real-time Codex availability or latency monitor.
-- It does not record on-schedule renewals — only early ones.
+- It stores quota snapshots, but only creates public timeline events for
+  noteworthy/early resets rather than routine on-schedule renewals.
 - Not affiliated with OpenAI and has no access to internal data.
