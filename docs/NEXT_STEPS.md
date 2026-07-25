@@ -8,7 +8,6 @@ architecture.
 
 1. Confirm the remaining production behaviors:
 
-- snapshots older than 90 days are pruned;
 - a controlled monitor pause leaves the website online but marks the quota
   snapshot stale after 30 minutes.
 
@@ -21,9 +20,10 @@ architecture.
 
 ## Later backlog
 
-Enable X API ingestion by adding `TWITTER_BEARER_TOKEN` as a GitHub Actions
-secret. `scripts/collect.mjs` and the collection workflow already support it.
-Expand `X_ACCOUNTS` when other reliable early-reset sources are identified.
+Keep X API ingestion disabled while it requires paid credits. Re-check pricing
+periodically; only add `TWITTER_BEARER_TOKEN` with an explicit spending decision
+and strict cap. Expand `X_ACCOUNTS` if other reliable early-reset sources are
+identified.
 
 ## Constraints for all remaining work
 

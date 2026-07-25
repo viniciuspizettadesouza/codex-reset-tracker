@@ -211,14 +211,19 @@ polling Reddit (r/codex, r/ChatGPT, r/OpenAI), OpenAI Status, and optionally
 the X API. When it finds matching posts it clusters them by time window, builds
 events, and commits any changes to `data/resets.json` automatically.
 
-### Enable X API ingestion
+### Optional paid X API ingestion
 
-The X API source is off by default and activates as soon as the secret is present.
+The X API source is off by default and activates as soon as the secret is
+present. X currently charges for API reads, so leave this disabled for a
+zero-cost deployment. Reddit RSS and OpenAI Status collection continue without
+it.
 
-1. Create a free app at [developer.x.com](https://developer.x.com) (read-only
-   access is sufficient — no Elevated tier needed for recent-search).
-2. Copy the **Bearer Token** from the app's "Keys and tokens" page.
-3. In your GitHub repository go to **Settings → Secrets and variables → Actions**
+1. If you explicitly accept the cost, create an app in the
+   [X Developer Console](https://console.x.com/) and set a strict spending
+   limit.
+2. Purchase only the credits you intend to use and copy the app's
+   **Bearer Token**.
+3. In your GitHub repository, go to **Settings → Secrets and variables → Actions**
    and add a secret named `TWITTER_BEARER_TOKEN` with that value.
 
 The next scheduled run (or a manual **Run workflow** dispatch) will pick it up.

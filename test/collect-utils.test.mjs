@@ -2,10 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   parseRssItems,
+  isRelevantRedditTitle,
   clusterByWindow,
   buildEvent,
   CLUSTER_WINDOW_MS,
 } from "../scripts/lib/collect-utils.mjs";
+
+const QUALIFIED_KEYWORDS = ["quota reset", "weekly limit reset"];
 
 // ── parseRssItems ────────────────────────────────────────────────────────────
 
@@ -59,6 +62,22 @@ test("parseRssItems skips items missing title or date", () => {
   const items = parseRssItems(xml);
   assert.equal(items.length, 1);
   assert.equal(items[0].title, "Valid item");
+});
+
+test("isRelevantRedditTitle accepts short reset titles within r/codex", () => {
+  assert.equal(
+    isRelevantRedditTitle("Hey Babe, how about that reset", "codex", QUALIFIED_KEYWORDS),
+    true,
+  );
+  assert.equal(isRelevantRedditTitle("Reset incoming.", "codex", QUALIFIED_KEYWORDS), true);
+});
+
+test("isRelevantRedditTitle keeps general subreddits Codex-qualified", () => {
+  assert.equal(isRelevantRedditTitle("Reset incoming.", "ChatGPT", QUALIFIED_KEYWORDS), false);
+  assert.equal(
+    isRelevantRedditTitle("Codex weekly limit reset", "ChatGPT", QUALIFIED_KEYWORDS),
+    true,
+  );
 });
 
 test("parseRssItems returns multiple items in document order", () => {

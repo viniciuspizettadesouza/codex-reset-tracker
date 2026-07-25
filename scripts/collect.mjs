@@ -14,7 +14,12 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { upsertEvent } from "./lib/events.mjs";
-import { parseRssItems, clusterByWindow, buildEvent } from "./lib/collect-utils.mjs";
+import {
+  parseRssItems,
+  isRelevantRedditTitle,
+  clusterByWindow,
+  buildEvent,
+} from "./lib/collect-utils.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_PATH = join(__dirname, "../data/resets.json");
@@ -42,6 +47,8 @@ const KEYWORDS = [
 ];
 // r/codex is where early resets are usually reported first (often within minutes).
 const SUBREDDITS = ["codex", "ChatGPT", "OpenAI"];
+const GENERAL_REDDIT_QUERY =
+  "codex rate limit reset OR codex quota reset OR limits reset early";
 
 // X accounts whose timelines are always fetched in addition to keyword search.
 // Add handles here as new reliable sources are identified.
@@ -69,11 +76,9 @@ async function fetchWithRetry(url, options, retries = 2, timeoutMs = 10_000) {
 
 async function fetchRedditRss() {
   const posts = [];
-  const query = encodeURIComponent(
-    "codex rate limit reset OR codex quota reset OR limits reset early",
-  );
 
   for (const sub of SUBREDDITS) {
+    const query = encodeURIComponent(sub === "codex" ? "reset" : GENERAL_REDDIT_QUERY);
     const url = `https://www.reddit.com/r/${sub}/search.rss?q=${query}&sort=new&t=week&restrict_sr=1`;
     try {
       const res = await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } });
@@ -84,8 +89,7 @@ async function fetchRedditRss() {
       const xml = await res.text();
       const items = parseRssItems(xml);
       for (const item of items) {
-        const text = item.title.toLowerCase();
-        const isRelevant = KEYWORDS.some((kw) => text.includes(kw));
+        const isRelevant = isRelevantRedditTitle(item.title, sub, KEYWORDS);
         if (isRelevant) {
           const createdAt = new Date(item.pubDate).toISOString();
           posts.push({

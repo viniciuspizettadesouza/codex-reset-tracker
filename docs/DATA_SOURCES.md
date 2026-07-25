@@ -18,10 +18,10 @@ authoritative signal is the personal monitor reading `/wham/usage` (see
 - **@thsottiaux on X** — Thibault Sottiaux, Codex lead engineer. ⭐ Extraordinary
   global resets are usually announced here first ("I have reset Codex rate limits
   for ALL paid plans…"). No official reset changelog exists, so this is the
-  closest thing to an announcement channel. Polled by `scripts/collect.mjs` via
-  the X API v2 recent-search endpoint when `TWITTER_BEARER_TOKEN` is set (see the
-  [README](../README.md#enable-x-api-ingestion) to enable it); skipped silently
-  otherwise.
+  closest thing to an announcement channel. Check the public account manually
+  for free. `scripts/collect.mjs` can poll it through the paid X API v2
+  recent-search endpoint when `TWITTER_BEARER_TOKEN` is set; leave that source
+  disabled for a zero-cost deployment.
 - **OpenAI Status** — https://status.openai.com — incident-linked resets appear
   here. Example incident (usage depleting faster than expected):
   https://status.openai.com/incidents/01KW2E6W0503W4NXJNCVAG8V6T
@@ -32,9 +32,11 @@ authoritative signal is the personal monitor reading `/wham/usage` (see
 - **r/codex** — primary; early resets are often reported within minutes.
   Example: https://www.reddit.com/r/codex/comments/1rnpm9a/weekly_limits_just_got_reset_early_for_everyone/
 - **r/ChatGPT**, **r/OpenAI** — secondary.
-- All three polled via RSS by `scripts/collect.mjs`. Note: Reddit increasingly
-  rate-limits/blocks datacenter IPs, so this source can go quiet — do not rely on
-  it alone.
+- All three are polled via RSS by `scripts/collect.mjs`. The r/codex query is
+  intentionally broad because short titles such as "Reset incoming" are common;
+  the general-subreddit queries remain Codex-qualified to limit noise. Note:
+  Reddit increasingly rate-limits/blocks datacenter IPs, so this source can go
+  quiet — do not rely on it alone.
 
 ## Feature gaps (why this project exists)
 

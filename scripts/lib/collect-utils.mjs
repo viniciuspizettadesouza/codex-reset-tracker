@@ -21,6 +21,14 @@ export function parseRssItems(xml) {
   return items;
 }
 
+export function isRelevantRedditTitle(title, subreddit, qualifiedKeywords) {
+  const normalizedTitle = title.toLowerCase();
+  return (
+    qualifiedKeywords.some((keyword) => normalizedTitle.includes(keyword)) ||
+    (subreddit.toLowerCase() === "codex" && /\bresets?\b/i.test(title))
+  );
+}
+
 export function clusterByWindow(posts) {
   const sorted = [...posts].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   const clusters = [];
