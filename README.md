@@ -211,6 +211,15 @@ polling Reddit (r/codex, r/ChatGPT, r/OpenAI), OpenAI Status, and optionally
 the X API. When it finds matching posts it clusters them by time window, builds
 events, and commits any changes to `data/resets.json` automatically.
 
+### Zero-cost X monitoring
+
+The primary announcement account is
+[Tibo / Thibault Sottiaux (`@thsottiaux`)](https://x.com/thsottiaux), Codex
+lead at OpenAI. For free platform-native alerts, follow the account in X, enable
+the notification bell for all posts, and allow X notifications on the browser
+or phone. This alerts the user directly; it does not feed the autonomous
+collector.
+
 ### Optional paid X API ingestion
 
 The X API source is off by default and activates as soon as the secret is

@@ -1,6 +1,30 @@
 {
-  "lastUpdatedAt": "2026-07-24T00:00:00Z",
+  "lastUpdatedAt": "2026-07-25T19:42:56Z",
   "events": [
+    {
+      "id": "official-2026-07-25-global-reset",
+      "occurredAt": "2026-07-25T19:21:32Z",
+      "scheduledAt": "2026-07-28T23:57:21Z",
+      "daysEarly": 3.2,
+      "reportedAt": "2026-07-25T19:17:12.695Z",
+      "status": "official",
+      "title": "Usage limits reset after near-global outage",
+      "affectedPlans": ["Plus"],
+      "reportCount": 2,
+      "sourceName": "Tibo / Thibault Sottiaux (@thsottiaux) on X",
+      "sourceUrl": "https://x.com/thsottiaux/status/2081096447718723984",
+      "sources": [
+        {
+          "name": "Tibo / Thibault Sottiaux (@thsottiaux) on X",
+          "url": "https://x.com/thsottiaux/status/2081096447718723984"
+        },
+        {
+          "name": "Sanitized personal monitor",
+          "url": "https://codex-reset-tracker.vercel.app/#live-quota"
+        }
+      ],
+      "description": "Tibo announced a usage-limit reset for all Codex and ChatGPT Work users following an almost global outage. The sanitized personal monitor observed weekly usage change from 48% used to 0% used at 19:21:32 UTC, 76.6 hours before the previously scheduled reset."
+    },
     {
       "id": "report-2026-07-22",
       "occurredAt": "2026-07-22T00:00:00Z",

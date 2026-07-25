@@ -2,6 +2,7 @@ import resetData from "@/data/resets.json";
 import LiveQuotaPanel from "@/app/components/LiveQuotaPanel";
 import ReportForm from "@/app/components/ReportForm";
 import { getCachedLiveQuotaData } from "@/app/lib/live-quota-cache";
+import { findOfficialResetConfirmation } from "@/app/lib/reset-corroboration";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,10 @@ export default async function Home() {
   const latest = events[0];
   const latestHoursAgo = hoursAgo(latest.occurredAt);
   const showBanner = latestHoursAgo <= 24;
+  const latestLiveReset = [...liveQuotaData.resetEvents].sort(
+    (a, b) => Date.parse(b.detectedAt) - Date.parse(a.detectedAt),
+  )[0];
+  const officialConfirmation = findOfficialResetConfirmation(latestLiveReset?.detectedAt, events);
 
   // Stats
   const daysEarlyValues = events
@@ -124,7 +129,7 @@ export default async function Home() {
       {showBanner && (
         <div className={`liveBanner ${latest.status}`} role="alert">
           <span className={`liveBannerDot ${latest.status}`} aria-hidden="true" />
-          <span>
+          <span className="liveBannerMessage">
             <strong>
               {typeof latest.daysEarly === "number" && latest.daysEarly > 0
                 ? "Early reset detected"
@@ -149,8 +154,8 @@ export default async function Home() {
           </div>
           <h1>Codex Reset Tracker</h1>
           <p className="heroCopy">
-            OpenAI Codex sometimes resets usage limits early. This tracker shows you exactly when, so
-            you stop refreshing and start coding.
+            OpenAI Codex sometimes resets usage limits early. This tracker shows you exactly when,
+            so you stop refreshing and start coding.
           </p>
           <a className="heroAction" href="#live-quota">
             View live quota <span aria-hidden="true">↓</span>
@@ -171,7 +176,11 @@ export default async function Home() {
         </div>
       </section>
 
-      <LiveQuotaPanel data={liveQuotaData} generatedAt={generatedAt} />
+      <LiveQuotaPanel
+        data={liveQuotaData}
+        generatedAt={generatedAt}
+        officialConfirmation={officialConfirmation}
+      />
 
       <section className="shell latestSection" id="latest">
         <div className="latestCard">
@@ -309,7 +318,9 @@ export default async function Home() {
           </div>
           <div>
             <span className="legend community" /> <strong>Community confirmed</strong>
-            <p>Multiple consistent reports from independent users, with no official announcement.</p>
+            <p>
+              Multiple consistent reports from independent users, with no official announcement.
+            </p>
           </div>
           <div>
             <span className="legend suspected" /> <strong>Suspected</strong>

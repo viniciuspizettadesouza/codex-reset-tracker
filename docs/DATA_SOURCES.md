@@ -15,13 +15,16 @@ authoritative signal is the personal monitor reading `/wham/usage` (see
 
 ## Announcements & incidents (corroboration)
 
-- **@thsottiaux on X** — Thibault Sottiaux, Codex lead engineer. ⭐ Extraordinary
-  global resets are usually announced here first ("I have reset Codex rate limits
-  for ALL paid plans…"). No official reset changelog exists, so this is the
-  closest thing to an announcement channel. Check the public account manually
-  for free. `scripts/collect.mjs` can poll it through the paid X API v2
-  recent-search endpoint when `TWITTER_BEARER_TOKEN` is set; leave that source
-  disabled for a zero-cost deployment.
+- **[Tibo / Thibault Sottiaux (`@thsottiaux`) on
+  X](https://x.com/thsottiaux)** — Codex lead engineer. ⭐ Extraordinary global
+  resets are usually announced here first ("I have reset Codex rate limits for
+  ALL paid plans…"). No official reset changelog exists, so this is the closest
+  thing to an announcement channel. For free alerts, follow the account and
+  enable X's notification bell for all posts. `scripts/collect.mjs` can poll it
+  through the paid X API v2 recent-search endpoint when
+  `TWITTER_BEARER_TOKEN` is set; leave that source disabled for a zero-cost
+  deployment. Confirmed example: [25 July 2026 outage-compensation
+  reset](https://x.com/thsottiaux/status/2081096447718723984).
 - **OpenAI Status** — https://status.openai.com — incident-linked resets appear
   here. Example incident (usage depleting faster than expected):
   https://status.openai.com/incidents/01KW2E6W0503W4NXJNCVAG8V6T

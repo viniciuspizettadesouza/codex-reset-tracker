@@ -8,10 +8,12 @@ import {
   type HistoryRange,
   type LiveQuotaData,
 } from "@/app/lib/live-quota";
+import type { OfficialResetConfirmation } from "@/app/lib/reset-corroboration";
 
 type LiveQuotaPanelProps = {
   data: LiveQuotaData;
   generatedAt: string;
+  officialConfirmation: OfficialResetConfirmation | null;
 };
 
 const chartWidth = 700;
@@ -108,7 +110,11 @@ function HistoryChart({
   );
 }
 
-export default function LiveQuotaPanel({ data, generatedAt }: LiveQuotaPanelProps) {
+export default function LiveQuotaPanel({
+  data,
+  generatedAt,
+  officialConfirmation,
+}: LiveQuotaPanelProps) {
   const [rangeDays, setRangeDays] = useState<HistoryRange>(30);
   const generatedTimestamp = Date.parse(generatedAt);
   const view = useMemo(
@@ -188,11 +194,34 @@ export default function LiveQuotaPanel({ data, generatedAt }: LiveQuotaPanelProp
             </p>
           )}
           {latestReset && (
-            <p className="liveQuotaResetNote" suppressHydrationWarning>
-              <span aria-hidden="true">↻</span>
-              Last refill detected {localDate(latestReset.detectedAt)}
-              {latestReset.hoursEarly !== null ? ` — ${latestReset.hoursEarly}h early` : ""}
-            </p>
+            <div className={`liveQuotaResetEvidence ${officialConfirmation ? "confirmed" : ""}`}>
+              <div className="liveQuotaResetEvidenceHeader">
+                <p className="liveQuotaResetNote" suppressHydrationWarning>
+                  <span aria-hidden="true">↻</span>
+                  <span>
+                    <strong>Detected independently</strong>
+                    Last refill {localDate(latestReset.detectedAt)}
+                    {latestReset.hoursEarly !== null ? ` — ${latestReset.hoursEarly}h early` : ""}
+                  </span>
+                </p>
+                {officialConfirmation && (
+                  <span className="badge official">Officially confirmed</span>
+                )}
+              </div>
+              {officialConfirmation && (
+                <p className="liveQuotaOfficialSource">
+                  <span>{officialConfirmation.sourceName} corroborated this reset.</span>
+                  <a
+                    href={officialConfirmation.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`View official confirmation: ${officialConfirmation.title}`}
+                  >
+                    View official X post ↗
+                  </a>
+                </p>
+              )}
+            </div>
           )}
         </div>
 

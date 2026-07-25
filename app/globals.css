@@ -135,7 +135,8 @@ a {
 
 /* ─── Live banner ─────────────────────────────────────────── */
 .liveBanner {
-  display: flex;
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   padding: 11px 20px;
@@ -156,7 +157,7 @@ a {
   border-bottom-color: rgba(223, 116, 72, 0.22);
 }
 .liveBannerDot {
-  flex-shrink: 0;
+  display: block;
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -170,8 +171,9 @@ a {
 .liveBannerDot.suspected {
   box-shadow: 0 0 0 3px rgba(223, 116, 72, 0.2);
 }
-.liveBanner span {
-  flex: 1;
+.liveBannerMessage {
+  min-width: 0;
+  text-align: center;
 }
 .liveBannerLink {
   color: var(--brand);
@@ -293,7 +295,9 @@ h1 {
   color: var(--action-fg);
   font-size: 15px;
   font-weight: 600;
-  transition: transform var(--duration-fast), background var(--duration-fast);
+  transition:
+    transform var(--duration-fast),
+    background var(--duration-fast);
 }
 
 .heroAction:hover {
@@ -421,10 +425,7 @@ h1 {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: conic-gradient(
-    var(--brand) var(--quota-angle),
-    rgba(255, 255, 255, 0.08) 0
-  );
+  background: conic-gradient(var(--brand) var(--quota-angle), rgba(255, 255, 255, 0.08) 0);
   position: relative;
 }
 
@@ -479,8 +480,7 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
-.liveQuotaNotice,
-.liveQuotaResetNote {
+.liveQuotaNotice {
   margin: 24px 0 0;
   padding: 12px 14px;
   border-radius: var(--radius-control);
@@ -496,8 +496,58 @@ h1 {
 .liveQuotaResetNote {
   display: flex;
   gap: 9px;
+  margin: 0;
   color: var(--brand-text);
+  font-size: 12px;
+}
+
+.liveQuotaResetNote > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.liveQuotaResetNote strong {
+  color: var(--text);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.liveQuotaResetEvidence {
+  margin-top: 24px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
   background: var(--brand-soft);
+}
+
+.liveQuotaResetEvidence.confirmed {
+  border-color: rgba(67, 201, 139, 0.22);
+  background: var(--official-soft);
+}
+
+.liveQuotaResetEvidenceHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.liveQuotaOfficialSource {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(67, 201, 139, 0.18);
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.liveQuotaOfficialSource a {
+  flex-shrink: 0;
+  color: var(--official);
+  font-weight: 700;
 }
 
 .liveQuotaHistory {
@@ -939,7 +989,9 @@ time,
   border: none;
   border-radius: var(--radius-control);
   cursor: pointer;
-  transition: opacity var(--duration-fast), transform 0.1s;
+  transition:
+    opacity var(--duration-fast),
+    transform 0.1s;
 }
 .submitBtn:hover:not(:disabled) {
   opacity: 0.86;
@@ -1102,6 +1154,10 @@ code {
     grid-template-columns: 120px 1fr;
     gap: 22px;
   }
+  .liveQuotaResetEvidenceHeader,
+  .liveQuotaOfficialSource {
+    flex-direction: column;
+  }
   .quotaRing {
     width: 120px;
   }
@@ -1135,6 +1191,17 @@ code {
   }
   .headerLinkAccent {
     padding: 5px 12px;
+  }
+  .liveBanner {
+    grid-template-columns: 7px minmax(0, 1fr);
+    align-items: start;
+    padding-inline: 14px;
+  }
+  .liveBannerMessage {
+    text-align: left;
+  }
+  .liveBannerLink {
+    grid-column: 2;
   }
   .timeline {
     padding-left: 28px;
