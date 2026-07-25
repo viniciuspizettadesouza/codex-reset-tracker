@@ -49,6 +49,10 @@ Configuration via environment variables (all optional):
 - `CODEX_WEBHOOK_URL` — POST alerts to a Discord / Slack / Telegram-bot / ntfy webhook. The platform is auto-detected from the URL.
 - `CODEX_TELEGRAM_CHAT_ID` — required when `CODEX_WEBHOOK_URL` points to a Telegram bot API URL.
 - `CODEX_MONITOR_STATE` — where snapshots are stored (default `~/.codex-reset-tracker/monitor-state.json`).
+- `CODEX_INGEST_URL` — hosted ingest endpoint, such as
+  `https://example.vercel.app/api/monitor`.
+- `CODEX_INGEST_TOKEN` — dedicated ingest secret. Set both ingest variables to
+  publish sanitized weekly snapshots.
 - `CODEX_PLAN` — your plan (Plus / Pro / Team …), used when emitting events.
 
 Flags:
@@ -64,6 +68,11 @@ Flags:
 On macOS, alerts also fire as native desktop notifications. To run unattended,
 schedule the single-poll form with cron or launchd, or leave `--watch` running on
 an always-on host.
+
+Each successful poll prints both quota representations, for example
+`69% remaining (31% used)`. When hosted publishing is configured, failed uploads
+do not interrupt local detection: sanitized payloads are queued in the local
+monitor state and retried in order on the next poll.
 
 ### Try it offline (no Codex account needed)
 

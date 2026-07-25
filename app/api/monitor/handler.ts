@@ -8,9 +8,9 @@ const ISO_UTC_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 
 type ResetEventPayload = {
   detectedAt: string;
-  expectedResetAt: string;
+  expectedResetAt: string | null;
   newResetAt: string;
-  hoursEarly: number;
+  hoursEarly: number | null;
   previousUsedPercent: number;
   currentUsedPercent: number;
 };
@@ -81,11 +81,12 @@ function parseResetEvent(value: unknown): ResetEventPayload | null {
 
   if (
     !isUtcTimestamp(value.detectedAt) ||
-    !isUtcTimestamp(value.expectedResetAt) ||
+    (value.expectedResetAt !== null && !isUtcTimestamp(value.expectedResetAt)) ||
     !isUtcTimestamp(value.newResetAt) ||
-    typeof value.hoursEarly !== "number" ||
-    !Number.isFinite(value.hoursEarly) ||
-    value.hoursEarly <= 0 ||
+    (value.hoursEarly !== null &&
+      (typeof value.hoursEarly !== "number" ||
+        !Number.isFinite(value.hoursEarly) ||
+        value.hoursEarly < 0)) ||
     !isPercent(value.previousUsedPercent) ||
     !isPercent(value.currentUsedPercent)
   ) {
@@ -137,15 +138,21 @@ export function validateMonitorPayload(value: unknown): ValidationResult {
   }
 
   if (resetEvent) {
-    const calculatedHoursEarly =
-      (Date.parse(resetEvent.expectedResetAt) - Date.parse(resetEvent.detectedAt)) / 3_600_000;
+    const calculatedHoursEarly = resetEvent.expectedResetAt
+      ? Math.max(
+          0,
+          (Date.parse(resetEvent.expectedResetAt) - Date.parse(resetEvent.detectedAt)) / 3_600_000,
+        )
+      : null;
     if (
       resetEvent.detectedAt !== value.observedAt ||
       resetEvent.newResetAt !== value.resetAt ||
       resetEvent.currentUsedPercent !== value.usedPercent ||
       resetEvent.previousUsedPercent <= resetEvent.currentUsedPercent ||
-      calculatedHoursEarly <= 0 ||
-      Math.abs(calculatedHoursEarly - resetEvent.hoursEarly) > 0.05
+      (calculatedHoursEarly === null) !== (resetEvent.hoursEarly === null) ||
+      (calculatedHoursEarly !== null &&
+        resetEvent.hoursEarly !== null &&
+        Math.abs(calculatedHoursEarly - resetEvent.hoursEarly) > 0.05)
     ) {
       return { success: false, error: "Reset metadata values are invalid" };
     }

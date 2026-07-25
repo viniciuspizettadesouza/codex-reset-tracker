@@ -18,15 +18,18 @@ CREATE TABLE reset_events (
   snapshot_id BIGINT UNIQUE
     REFERENCES quota_snapshots(id) ON DELETE SET NULL,
   detected_at TIMESTAMPTZ NOT NULL,
-  expected_reset_at TIMESTAMPTZ NOT NULL,
+  expected_reset_at TIMESTAMPTZ,
   new_reset_at TIMESTAMPTZ NOT NULL,
-  hours_early DOUBLE PRECISION NOT NULL CHECK (hours_early > 0),
+  hours_early DOUBLE PRECISION CHECK (hours_early >= 0),
   previous_used_percent DOUBLE PRECISION NOT NULL
     CHECK (previous_used_percent >= 0 AND previous_used_percent <= 100),
   current_used_percent DOUBLE PRECISION NOT NULL
     CHECK (current_used_percent >= 0 AND current_used_percent <= 100),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CHECK (expected_reset_at > detected_at),
+  CHECK (
+    (expected_reset_at IS NULL AND hours_early IS NULL)
+    OR (expected_reset_at IS NOT NULL AND hours_early IS NOT NULL)
+  ),
   CHECK (previous_used_percent > current_used_percent)
 );
 

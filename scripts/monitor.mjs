@@ -32,6 +32,7 @@ import { fileURLToPath } from "node:url";
 import { execFile } from "node:child_process";
 import { parseUsage, detectResets } from "./lib/quota.mjs";
 import { upsertEvent, computeDaysEarly } from "./lib/events.mjs";
+import { buildMonitorPayload, formatQuota, publishQuotaSnapshot } from "./lib/publisher.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const USAGE_URL = "https://chatgpt.com/backend-api/wham/usage";
@@ -47,6 +48,8 @@ const AUTH_PATH = opt("--auth", join(CODEX_HOME, "auth.json"));
 const STATE_PATH =
   process.env.CODEX_MONITOR_STATE || join(homedir(), ".codex-reset-tracker", "monitor-state.json");
 const WEBHOOK_URL = process.env.CODEX_WEBHOOK_URL || "";
+const INGEST_URL = process.env.CODEX_INGEST_URL || "";
+const INGEST_TOKEN = process.env.CODEX_INGEST_TOKEN || "";
 const INTERVAL_SEC = Number(opt("--interval", "900"));
 const FIXTURE_PATH = opt("--fixture", "");
 const EMIT_EVENT = flag("--emit-event");
@@ -306,8 +309,11 @@ async function pollOnce(auth, opts = {}) {
     );
   }
 
+  const observedAt = new Date().toISOString();
   const state = loadState();
-  const events = detectResets(state.windows, windows);
+  const events = detectResets(state.windows, windows, {
+    now: Date.parse(observedAt),
+  });
 
   for (const ev of events) {
     if (ev.window !== "weekly" && !ALL_WINDOWS) {
@@ -317,17 +323,51 @@ async function pollOnce(auth, opts = {}) {
     await handleEvent(ev);
   }
 
-  if (events.length === 0) {
-    const wk = windows.weekly;
-    const wkInfo = wk
-      ? `Weekly: ${wk.usedPercent}% used, resets ${wk.resetsAt}.`
-      : "No weekly window in payload.";
-    console.log(`Polled OK. ${wkInfo} No reset detected.`);
-  }
+  const weekly = windows.weekly;
+  const weeklyInfo = weekly
+    ? `Weekly: ${formatQuota(weekly.usedPercent)}, resets ${weekly.resetsAt}.`
+    : "No weekly window in payload.";
+  console.log(`Polled OK. ${weeklyInfo}${events.length === 0 ? " No reset detected." : ""}`);
 
   state.windows = windows;
-  state.lastPollAt = new Date().toISOString();
+  state.lastPollAt = observedAt;
+
+  const weeklyReset = events.find((event) => event.window === "weekly" && event.refilled);
+  const payload = buildMonitorPayload(weekly, weeklyReset, observedAt);
+  const publisherConfigured = Boolean(INGEST_URL && INGEST_TOKEN);
+  if ((INGEST_URL || INGEST_TOKEN) && !publisherConfigured) {
+    console.warn(
+      "Quota publishing is disabled because both CODEX_INGEST_URL and CODEX_INGEST_TOKEN are required.",
+    );
+  }
+
+  if (payload && publisherConfigured) {
+    const pendingUploads = Array.isArray(state.pendingUploads) ? state.pendingUploads : [];
+    if (!pendingUploads.some((pending) => pending.observedAt === payload.observedAt)) {
+      pendingUploads.push(payload);
+    }
+    state.pendingUploads = pendingUploads;
+  }
   saveState(state);
+
+  while (publisherConfigured && state.pendingUploads?.length) {
+    const pending = state.pendingUploads[0];
+    try {
+      const result = await publishQuotaSnapshot({
+        url: INGEST_URL,
+        token: INGEST_TOKEN,
+        payload: pending,
+      });
+      console.log(`Published weekly snapshot (${result.status}).`);
+      state.pendingUploads.shift();
+      saveState(state);
+    } catch (err) {
+      console.warn(
+        `Quota snapshot upload failed; local monitoring remains active and the next poll will retry: ${err.message}`,
+      );
+      break;
+    }
+  }
 }
 
 async function main() {

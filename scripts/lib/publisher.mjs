@@ -1,0 +1,93 @@
+const WEEKLY_WINDOW_MIN_SECONDS = 6 * 24 * 60 * 60;
+const WEEKLY_WINDOW_MAX_SECONDS = 8 * 24 * 60 * 60;
+const DEFAULT_TIMEOUT_MS = 10_000;
+
+function roundedPercent(value) {
+  return Math.round(value * 100) / 100;
+}
+
+export function formatQuota(usedPercent) {
+  return `${roundedPercent(100 - usedPercent)}% remaining (${usedPercent}% used)`;
+}
+
+export function buildMonitorPayload(weekly, reset, observedAt) {
+  const observedTimestamp = Date.parse(observedAt);
+  const resetTimestamp = Date.parse(weekly?.resetsAt);
+  if (
+    !weekly ||
+    typeof weekly.usedPercent !== "number" ||
+    !Number.isFinite(weekly.usedPercent) ||
+    weekly.usedPercent < 0 ||
+    weekly.usedPercent > 100 ||
+    typeof weekly.resetsAt !== "string" ||
+    !Number.isFinite(observedTimestamp) ||
+    !Number.isFinite(resetTimestamp) ||
+    resetTimestamp <= observedTimestamp ||
+    typeof weekly.windowMinutes !== "number"
+  ) {
+    return null;
+  }
+
+  const windowSeconds = Math.round(weekly.windowMinutes * 60);
+  if (windowSeconds < WEEKLY_WINDOW_MIN_SECONDS || windowSeconds > WEEKLY_WINDOW_MAX_SECONDS) {
+    return null;
+  }
+
+  const payload = {
+    version: 1,
+    observedAt,
+    usedPercent: weekly.usedPercent,
+    resetAt: new Date(weekly.resetsAt).toISOString(),
+    windowSeconds,
+    resetDetected: Boolean(reset?.refilled),
+  };
+
+  if (reset?.refilled) {
+    payload.resetEvent = {
+      detectedAt: observedAt,
+      expectedResetAt: reset.expectedResetAt ? new Date(reset.expectedResetAt).toISOString() : null,
+      newResetAt: payload.resetAt,
+      hoursEarly: reset.hoursEarly ?? null,
+      previousUsedPercent: reset.prevPercent,
+      currentUsedPercent: weekly.usedPercent,
+    };
+  }
+
+  return payload;
+}
+
+export async function publishQuotaSnapshot({
+  url,
+  token,
+  payload,
+  fetchImpl = fetch,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+}) {
+  if (!url || !token) return { status: "disabled" };
+
+  let endpoint;
+  try {
+    endpoint = new URL(url);
+  } catch {
+    throw new Error("CODEX_INGEST_URL is not a valid URL");
+  }
+  if (!["http:", "https:"].includes(endpoint.protocol)) {
+    throw new Error("CODEX_INGEST_URL must use HTTP or HTTPS");
+  }
+
+  const response = await fetchImpl(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+
+  if (!response.ok) {
+    throw new Error(`ingest endpoint returned HTTP ${response.status}`);
+  }
+
+  return { status: response.status === 201 ? "created" : "accepted" };
+}

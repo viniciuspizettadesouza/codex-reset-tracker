@@ -4,44 +4,7 @@ Goal: **tell the user the moment their Codex weekly quota resets, especially
 when it resets early.** See [VISION.md](VISION.md) for the product and trust-zone
 architecture.
 
-## ▶️ Immediate next milestone: Phase 2 — local publisher
-
-Connect `scripts/monitor.mjs` to the authenticated hosted ingest endpoint:
-
-```text
-scripts/monitor.mjs
-  → POST /api/monitor (Bearer ingest token)
-  → Neon quota_snapshots / reset_events
-  → dynamic quota card and history on the Next.js page
-```
-
-1. POST every successful weekly snapshot when both `CODEX_INGEST_URL` and
-   `CODEX_INGEST_TOKEN` are configured.
-2. Construct the version 1 payload from the normalized weekly window using only
-   the fields accepted by `POST /api/monitor`.
-3. Keep `monitor-state.json` local. It remains necessary for reset comparison
-   and must never be committed or uploaded.
-4. Treat upload failure as non-fatal: preserve local detection, print a clear
-   warning, and retry with the next poll.
-5. Show both quota representations in console output:
-   `69% remaining (31% used)`.
-6. Add unit and integration tests using a local mock HTTP server, covering:
-   - publishing a normal weekly snapshot;
-   - publishing detected reset metadata;
-   - missing publisher configuration;
-   - authentication or server failure;
-   - retrying at the next poll without breaking local detection.
-7. Run `npm test`, `npm run lint`, `npm run build`, and
-   `npm audit --omit=dev`.
-
-Publisher environment variables:
-
-```text
-CODEX_INGEST_URL            # e.g. https://…/api/monitor
-CODEX_INGEST_TOKEN          # local copy of the dedicated ingest token
-```
-
-## Phase 3 — live website
+## ▶️ Immediate next milestone: Phase 3 — live website
 
 1. Add server-side Neon queries for the latest snapshot and recent history.
 2. Add a prominent live quota card with:

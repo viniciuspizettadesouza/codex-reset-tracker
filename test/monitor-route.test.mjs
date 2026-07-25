@@ -79,6 +79,27 @@ test("POST /api/monitor stores a valid sanitized snapshot", async () => {
   assert.deepEqual([...snapshots.values()], [validPayload()]);
 });
 
+test("POST /api/monitor accepts an on-time refill with zero hours early", async () => {
+  const { handler, snapshots } = memoryHandler();
+  const payload = validPayload({
+    usedPercent: 2,
+    resetDetected: true,
+    resetEvent: {
+      detectedAt: "2026-07-25T10:00:00.000Z",
+      expectedResetAt: "2026-07-25T09:00:00.000Z",
+      newResetAt: "2026-08-01T10:00:00.000Z",
+      hoursEarly: 0,
+      previousUsedPercent: 96,
+      currentUsedPercent: 2,
+    },
+  });
+
+  const response = await handler(post(payload));
+
+  assert.equal(response.status, 201);
+  assert.deepEqual([...snapshots.values()], [payload]);
+});
+
 test("POST /api/monitor treats a retry as an idempotent duplicate", async () => {
   const { handler, snapshots } = memoryHandler();
   const requestBody = validPayload();
