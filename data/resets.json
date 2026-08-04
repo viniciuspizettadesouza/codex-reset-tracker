@@ -1,7 +1,9 @@
 {
-  "lastUpdatedAt": "2026-07-25T19:42:56Z",
+  "lastUpdatedAt": "2026-08-04T17:27:16.657Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
-  "collectedReportIds": [],
+  "collectedReportIds": [
+    "reddit:t3_1vfb6e0"
+  ],
   "events": [
     {
       "id": "official-2026-07-25-global-reset",
@@ -11,7 +13,9 @@
       "reportedAt": "2026-07-25T19:17:12.695Z",
       "status": "official",
       "title": "Usage limits reset after near-global outage",
-      "affectedPlans": ["Plus"],
+      "affectedPlans": [
+        "Plus"
+      ],
       "reportCount": 2,
       "sourceName": "Tibo / Thibault Sottiaux (@thsottiaux) on X",
       "sourceUrl": "https://x.com/thsottiaux/status/2081096447718723984",
@@ -35,10 +39,28 @@
       "reportedAt": "2026-07-24T00:00:00Z",
       "status": "suspected",
       "title": "Quota reset ~5 days before scheduled date",
-      "affectedPlans": ["Plus"],
+      "affectedPlans": [
+        "Plus"
+      ],
       "reportCount": 1,
       "sourceName": "Direct observation",
       "description": "Quota was exhausted and showed renewal date of 27 Jul 2026. Observed renewed quota around 21–23 Jul 2026, approximately 5 days ahead of schedule. Exact time unknown."
+    },
+    {
+      "id": "auto-2026-08-04-t3_1vf",
+      "occurredAt": "2026-08-04T14:00:04.000Z",
+      "scheduledAt": null,
+      "daysEarly": null,
+      "reportedAt": "2026-08-04T14:00:04.000Z",
+      "status": "suspected",
+      "title": "Quota reset reported by community",
+      "affectedPlans": [
+        "Unknown"
+      ],
+      "reportCount": 1,
+      "sourceName": "1 Reddit report",
+      "sourceUrl": "https://www.reddit.com/r/codex/comments/1vfb6e0/i_built_a_macos_menu_bar_app_to_track_codex/",
+      "description": "1 independent report across r/codex suggest a quota reset occurred around this time."
     }
   ]
 }
