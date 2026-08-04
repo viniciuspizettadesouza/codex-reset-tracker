@@ -1,3 +1,6 @@
 .next
 node_modules
 public
+
+# Generated and updated autonomously by scripts/collect.mjs.
+data/resets.json

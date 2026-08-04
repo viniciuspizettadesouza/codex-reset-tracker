@@ -47,8 +47,7 @@ const KEYWORDS = [
 ];
 // r/codex is where early resets are usually reported first (often within minutes).
 const SUBREDDITS = ["codex", "ChatGPT", "OpenAI"];
-const GENERAL_REDDIT_QUERY =
-  "codex rate limit reset OR codex quota reset OR limits reset early";
+const GENERAL_REDDIT_QUERY = "codex rate limit reset OR codex quota reset OR limits reset early";
 
 // X accounts whose timelines are always fetched in addition to keyword search.
 // Add handles here as new reliable sources are identified.

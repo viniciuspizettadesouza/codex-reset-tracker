@@ -8,6 +8,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "dashboard:local": "LOCAL_DASHBOARD_ENABLED=1 next dev --hostname 127.0.0.1 --port 3001",
+    "dashboard:start": "LOCAL_DASHBOARD_ENABLED=1 next start --hostname 127.0.0.1 --port 3001",
     "monitor": "node scripts/monitor.mjs",
     "monitor:raw": "node scripts/monitor.mjs --raw",
     "monitor:fixture": "node scripts/monitor.mjs --fixture scripts/fixtures/usage-weekly-low.json",

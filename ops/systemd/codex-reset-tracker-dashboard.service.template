@@ -1,0 +1,27 @@
+[Unit]
+Description=Codex Reset Tracker local dashboard
+Documentation=https://github.com/viniciuspizettadesouza/codex-reset-tracker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@REPOSITORY_PATH@
+Environment=NODE_ENV=production
+Environment=LOCAL_DASHBOARD_ENABLED=1
+EnvironmentFile=-%h/.config/codex-reset-tracker/dashboard.env
+ExecStart=@NODE_PATH@ node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3001
+Restart=on-failure
+RestartSec=10
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=default.target

@@ -91,3 +91,19 @@ export async function publishQuotaSnapshot({
 
   return { status: response.status === 201 ? "created" : "accepted" };
 }
+
+export async function drainPendingUploads({ pendingUploads, publish, onPublished = () => {} }) {
+  const published = [];
+  while (pendingUploads.length > 0) {
+    const payload = pendingUploads[0];
+    try {
+      const result = await publish(payload);
+      pendingUploads.shift();
+      published.push({ payload, result });
+      await onPublished(payload, result);
+    } catch (error) {
+      return { published, error };
+    }
+  }
+  return { published, error: null };
+}

@@ -26,6 +26,53 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Local operations dashboard
+
+The read-only local dashboard shows monitor health, the weekly quota, seven days
+of poll history, recent sanitized errors, the upload queue, and optional hosted
+snapshot synchronization. It never exposes Codex credentials, raw usage
+responses, account identifiers, or queued payload contents.
+
+For development, start it on the loopback interface:
+
+```bash
+npm run dashboard:local
+```
+
+Open `http://127.0.0.1:3001/local`. The local page and its status API return
+`404` unless `LOCAL_DASHBOARD_ENABLED=1`, and the provided command never listens
+on a LAN-facing address.
+
+The installed dashboard service uses a separate, optional environment file. It
+must not contain the monitor ingest token:
+
+```bash
+install -d -m 700 \
+  "$HOME/.config/codex-reset-tracker" \
+  "$HOME/.config/systemd/user"
+umask 077
+printf 'CODEX_REMOTE_STATUS_URL=%s\n' \
+  'https://codex-reset-tracker.vercel.app/api/quota/latest' \
+  > "$HOME/.config/codex-reset-tracker/dashboard.env"
+
+npm run build
+tracker_repository="$(pwd -P)"
+node_path="$(command -v node)"
+sed \
+  -e "s|@REPOSITORY_PATH@|$tracker_repository|g" \
+  -e "s|@NODE_PATH@|$node_path|g" \
+  ops/systemd/codex-reset-tracker-dashboard.service.template \
+  > "$HOME/.config/systemd/user/codex-reset-tracker-dashboard.service"
+
+systemctl --user daemon-reload
+systemctl --user enable --now codex-reset-tracker-dashboard.service
+```
+
+Run `npm run build` and restart both the monitor and dashboard services after
+updating the application so the long-running monitor loads the new telemetry
+code. See [docs/OPERATIONS.md](docs/OPERATIONS.md) for health-state and
+troubleshooting details.
+
 ## Personal quota monitor
 
 `scripts/monitor.mjs` watches your own Codex account and alerts you when the
@@ -132,7 +179,9 @@ startup is required.
 Each successful poll prints both quota representations, for example
 `69% remaining (31% used)`. When hosted publishing is configured, failed uploads
 do not interrupt local detection: sanitized payloads are queued in the local
-monitor state and retried in order on the next poll.
+monitor state and retried in order on the next poll. The state file is written
+atomically with mode `600`; it retains seven days of sanitized poll telemetry
+and preserves malformed state as a private `.corrupt-<timestamp>` backup.
 
 ### Try it offline (no Codex account needed)
 

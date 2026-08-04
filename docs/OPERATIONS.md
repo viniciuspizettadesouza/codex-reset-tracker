@@ -27,9 +27,83 @@ The monitor and backup paths are deliberately separate:
   URL and dedicated ingest token.
 - `~/.config/codex-reset-tracker/backup.env` contains only
   `BACKUP_DATABASE_URL`, using the direct Neon connection.
+- `~/.config/codex-reset-tracker/dashboard.env` contains only the optional
+  public hosted-status URL and no credentials.
 - `~/.codex-reset-tracker/monitor-state.json` is the local detection state.
 - `~/.codex-reset-tracker/backups/` contains private sanitized database dumps.
-- Neither environment file nor either local data path belongs in Git.
+- No environment file or local data path belongs in Git.
+
+## Local operations dashboard
+
+The dashboard is a separate read-only process. It reads the sanitized local
+monitor state, listens only on `127.0.0.1:3001`, and does not receive
+`CODEX_INGEST_TOKEN`, Codex authentication, or the database connection string.
+Its optional environment file is
+`~/.config/codex-reset-tracker/dashboard.env` and may contain only:
+
+```text
+CODEX_REMOTE_STATUS_URL=https://codex-reset-tracker.vercel.app/api/quota/latest
+```
+
+Build and install the user service from the repository root:
+
+```bash
+npm run build
+install -d -m 700 "$HOME/.config/codex-reset-tracker" \
+  "$HOME/.config/systemd/user"
+tracker_repository="$(pwd -P)"
+node_path="$(command -v node)"
+sed \
+  -e "s|@REPOSITORY_PATH@|$tracker_repository|g" \
+  -e "s|@NODE_PATH@|$node_path|g" \
+  ops/systemd/codex-reset-tracker-dashboard.service.template \
+  > "$HOME/.config/systemd/user/codex-reset-tracker-dashboard.service"
+systemctl --user daemon-reload
+systemctl --user enable --now codex-reset-tracker-dashboard.service
+```
+
+Open `http://127.0.0.1:3001/local`. Verify that the service is loopback-only:
+
+```bash
+systemctl --user status codex-reset-tracker-dashboard.service
+ss -ltnp | grep ':3001'
+journalctl --user -u codex-reset-tracker-dashboard.service -n 50 --no-pager
+```
+
+After pulling application changes, rebuild before restarting because the
+service uses the production Next.js server:
+
+```bash
+npm install
+npm run build
+systemctl --user restart codex-reset-tracker.service
+systemctl --user restart codex-reset-tracker-dashboard.service
+```
+
+Dashboard health is derived from the monitor's configured polling interval:
+
+- **Healthy:** the last successful local poll is no older than 1.5 polling
+  intervals, there are no consecutive failures, and the upload queue is empty.
+- **Degraded:** the latest poll is delayed, a poll or upload partially failed,
+  or sanitized uploads are waiting to retry.
+- **Offline:** no successful poll exists or the latest success is older than two
+  polling intervals.
+
+Remote comparison is informational. `Hosted snapshot unavailable` does not
+change local health. For `Hosted snapshot behind`, inspect the queue and monitor
+logs. For `Degraded` with an empty queue, inspect recent errors and verify Codex
+CLI authentication. For `Offline`, check the monitor service before the
+dashboard service:
+
+```bash
+systemctl --user status codex-reset-tracker.service
+journalctl --user -u codex-reset-tracker.service -n 50 --no-pager
+```
+
+The monitor retains seven days of local poll telemetry. State writes use a
+private temporary file and atomic rename. A malformed state file is moved to a
+mode-`600` `.corrupt-<timestamp>` backup before monitoring starts with a clean
+state; inspect that backup locally and never publish it.
 
 ## Direct Neon connection
 

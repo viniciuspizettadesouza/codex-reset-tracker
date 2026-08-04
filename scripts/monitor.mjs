@@ -32,10 +32,23 @@ import { fileURLToPath } from "node:url";
 import { execFile } from "node:child_process";
 import { parseUsage, detectResets } from "./lib/quota.mjs";
 import { upsertEvent, computeDaysEarly } from "./lib/events.mjs";
-import { buildMonitorPayload, formatQuota, publishQuotaSnapshot } from "./lib/publisher.mjs";
+import {
+  buildMonitorPayload,
+  drainPendingUploads,
+  formatQuota,
+  publishQuotaSnapshot,
+} from "./lib/publisher.mjs";
+import {
+  appendPollHistory,
+  loadMonitorState,
+  sanitizeMonitorError,
+  saveMonitorState,
+} from "./lib/monitor-state.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const USAGE_URL = "https://chatgpt.com/backend-api/wham/usage";
+const USAGE_TIMEOUT_MS = 30_000;
+const WEBHOOK_TIMEOUT_MS = 10_000;
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
 const opt = (name, def) => {
@@ -92,6 +105,7 @@ async function refreshAccessToken(refreshToken) {
     method: "POST",
     headers,
     body,
+    signal: AbortSignal.timeout(USAGE_TIMEOUT_MS),
   });
   if (!res.ok) {
     // Fall back to the Auth0 domain used by older CLI versions.
@@ -99,6 +113,7 @@ async function refreshAccessToken(refreshToken) {
       method: "POST",
       headers,
       body,
+      signal: AbortSignal.timeout(USAGE_TIMEOUT_MS),
     });
   }
   if (!res.ok) {
@@ -137,12 +152,18 @@ async function fetchUsage({ accessToken, accountId, refreshToken }, { onRefreshe
   };
   if (accountId) headers["ChatGPT-Account-Id"] = accountId;
 
-  let res = await fetch(USAGE_URL, { headers });
+  let res = await fetch(USAGE_URL, {
+    headers,
+    signal: AbortSignal.timeout(USAGE_TIMEOUT_MS),
+  });
   if (res.status === 401 && refreshToken) {
     // Attempt a silent token refresh, then retry once.
     const newToken = await refreshAccessToken(refreshToken);
     headers.Authorization = `Bearer ${newToken}`;
-    res = await fetch(USAGE_URL, { headers });
+    res = await fetch(USAGE_URL, {
+      headers,
+      signal: AbortSignal.timeout(USAGE_TIMEOUT_MS),
+    });
     if (onRefreshed) onRefreshed(newToken);
   }
   if (res.status === 401) {
@@ -202,29 +223,17 @@ function emitToTracker(ev) {
   console.log(`Tracker updated (${action}): ${candidate.id}`);
 }
 
-function loadState() {
-  try {
-    return JSON.parse(readFileSync(STATE_PATH, "utf-8"));
-  } catch {
-    return { windows: {} };
-  }
-}
-
-function saveState(state) {
-  mkdirSync(dirname(STATE_PATH), { recursive: true });
-  writeFileSync(STATE_PATH, JSON.stringify(state, null, 2) + "\n", "utf-8");
-}
-
 function notifyMac(title, message) {
-  if (process.platform !== "darwin") return;
+  if (process.platform !== "darwin") return "unsupported";
   execFile("/usr/bin/osascript", [
     "-e",
     `display notification ${JSON.stringify(message)} with title ${JSON.stringify(title)}`,
   ]);
+  return "attempted";
 }
 
 async function notifyWebhook(title, message) {
-  if (!WEBHOOK_URL) return;
+  if (!WEBHOOK_URL) return "disabled";
   const text = `${title}\n${message}`;
   let payload;
 
@@ -245,7 +254,7 @@ async function notifyWebhook(title, message) {
       console.warn(
         "Telegram webhook configured but CODEX_TELEGRAM_CHAT_ID is not set — skipping notification.",
       );
-      return;
+      return "misconfigured";
     }
     payload = { chat_id: chatId, text, parse_mode: "HTML" };
   } else {
@@ -254,39 +263,57 @@ async function notifyWebhook(title, message) {
   }
 
   try {
-    await fetch(WEBHOOK_URL, {
+    const response = await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
     });
+    if (!response.ok) {
+      console.warn(`Webhook notification failed: HTTP ${response.status}`);
+      return "failed";
+    }
+    return "sent";
   } catch (err) {
     console.warn("Webhook notification failed:", err.message);
+    return "failed";
   }
 }
 
-async function alert(title, message) {
+async function alert(title, message, state) {
   console.log(`\n🔔 ${title}\n${message}\n`);
-  notifyMac(title, message);
-  await notifyWebhook(title, message);
+  const desktop = notifyMac(title, message);
+  const webhook = await notifyWebhook(title, message);
+  if (state) {
+    state.lastAlert = {
+      at: new Date().toISOString(),
+      title,
+      desktop,
+      webhook,
+    };
+  }
 }
 
-async function handleEvent(ev) {
+async function handleEvent(ev, state) {
   const scope = ev.window === "weekly" ? "Weekly quota" : `${ev.window} quota`;
   if (ev.refilled && ev.early) {
     await alert(
       `Codex ${scope} reset EARLY`,
       `Refilled ${ev.hoursEarly}h before its scheduled reset (${ev.expectedResetAt}). Used ${ev.prevPercent}% → ${ev.currPercent}%.`,
+      state,
     );
   } else if (ev.refilled) {
     await alert(
       `Codex ${scope} reset`,
       `Quota refilled (${ev.prevPercent}% → ${ev.currPercent}%). Scheduled reset was ${ev.expectedResetAt ?? "unknown"}.`,
+      state,
     );
   } else {
     // Only the announced reset time moved earlier — a heads-up, not a refill yet.
     await alert(
       `Codex ${scope} reset time moved earlier`,
       `The scheduled reset was pulled forward from ${ev.expectedResetAt} to ${ev.newResetAt}. Quota still at ${ev.currPercent}%.`,
+      state,
     );
   }
   // Only real weekly refills are worth contributing to the tracker.
@@ -296,21 +323,35 @@ async function handleEvent(ev) {
 }
 
 async function pollOnce(auth, opts = {}) {
-  const raw = await getUsage(auth, opts);
+  const startedAt = new Date().toISOString();
+  const startedTimestamp = Date.parse(startedAt);
+  const state = loadMonitorState(STATE_PATH, startedTimestamp);
+  state.intervalSeconds = INTERVAL_SEC;
+  state.health.lastAttemptAt = startedAt;
+
+  const raw = await getUsage(auth, opts).catch((error) => {
+    recordPollFailure(state, startedAt, startedTimestamp, error);
+    throw error;
+  });
   if (flag("--raw")) {
     console.log(JSON.stringify(raw, null, 2));
     return;
   }
 
-  const windows = parseUsage(raw);
-  if (Object.keys(windows).length === 0) {
-    console.warn(
-      "Could not parse any rate-limit windows from the usage payload. Run with --raw to inspect the shape.",
-    );
+  let windows;
+  try {
+    windows = parseUsage(raw);
+    if (!windows.weekly) {
+      throw new Error(
+        "Usage payload did not include a supported weekly quota window. Run with --raw to inspect the shape.",
+      );
+    }
+  } catch (error) {
+    recordPollFailure(state, startedAt, startedTimestamp, error);
+    throw error;
   }
 
   const observedAt = new Date().toISOString();
-  const state = loadState();
   const events = detectResets(state.windows, windows, {
     now: Date.parse(observedAt),
   });
@@ -320,7 +361,7 @@ async function pollOnce(auth, opts = {}) {
       console.log(`(${ev.window} window changed — ignoring; use --all-windows to alert on it)`);
       continue;
     }
-    await handleEvent(ev);
+    await handleEvent(ev, state);
   }
 
   const weekly = windows.weekly;
@@ -335,6 +376,7 @@ async function pollOnce(auth, opts = {}) {
   const weeklyReset = events.find((event) => event.window === "weekly" && event.refilled);
   const payload = buildMonitorPayload(weekly, weeklyReset, observedAt);
   const publisherConfigured = Boolean(INGEST_URL && INGEST_TOKEN);
+  state.publishing.configured = publisherConfigured;
   if ((INGEST_URL || INGEST_TOKEN) && !publisherConfigured) {
     console.warn(
       "Quota publishing is disabled because both CODEX_INGEST_URL and CODEX_INGEST_TOKEN are required.",
@@ -348,31 +390,113 @@ async function pollOnce(auth, opts = {}) {
     }
     state.pendingUploads = pendingUploads;
   }
-  saveState(state);
+  saveMonitorState(STATE_PATH, state);
 
-  while (publisherConfigured && state.pendingUploads?.length) {
-    const pending = state.pendingUploads[0];
-    try {
-      const result = await publishQuotaSnapshot({
-        url: INGEST_URL,
-        token: INGEST_TOKEN,
-        payload: pending,
-      });
-      console.log(`Published weekly snapshot (${result.status}).`);
-      state.pendingUploads.shift();
-      saveState(state);
-    } catch (err) {
+  let publishStatus = publisherConfigured ? "not-attempted" : "disabled";
+  let publishError = null;
+  if (publisherConfigured && state.pendingUploads?.length) {
+    const drainResult = await drainPendingUploads({
+      pendingUploads: state.pendingUploads,
+      publish: (pending) => {
+        state.publishing.lastAttemptAt = new Date().toISOString();
+        return publishQuotaSnapshot({
+          url: INGEST_URL,
+          token: INGEST_TOKEN,
+          payload: pending,
+        });
+      },
+      onPublished: (pending, result) => {
+        console.log(`Published weekly snapshot (${result.status}).`);
+        publishStatus = result.status;
+        state.publishing.lastSuccessAt = new Date().toISOString();
+        state.publishing.lastStatus = result.status;
+        state.publishing.lastPublishedObservedAt = pending.observedAt;
+        state.publishing.lastError = null;
+        saveMonitorState(STATE_PATH, state);
+      },
+    });
+    if (drainResult.error) {
+      publishError = sanitizeMonitorError(drainResult.error);
+      publishStatus = "failed";
+      state.publishing.lastFailureAt = new Date().toISOString();
+      state.publishing.lastError = publishError;
+      state.publishing.lastStatus = "failed";
       console.warn(
-        `Quota snapshot upload failed; local monitoring remains active and the next poll will retry: ${err.message}`,
+        `Quota snapshot upload failed; local monitoring remains active and the next poll will retry: ${publishError}`,
       );
-      break;
     }
   }
+
+  const completedAt = new Date().toISOString();
+  const durationMs = Math.max(0, Date.parse(completedAt) - startedTimestamp);
+  state.health.lastSuccessAt = completedAt;
+  state.health.lastError = null;
+  state.health.consecutiveFailures = 0;
+  state.health.lastDurationMs = durationMs;
+  appendPollHistory(state, {
+    startedAt,
+    completedAt,
+    durationMs,
+    result: publishError ? "partial" : "success",
+    usedPercent: weekly.usedPercent,
+    resetAt: weekly.resetsAt,
+    resetDetected: Boolean(weeklyReset),
+    publishStatus,
+    error: publishError,
+  });
+  saveMonitorState(STATE_PATH, state);
+}
+
+function recordPollFailure(state, startedAt, startedTimestamp, error) {
+  const completedAt = new Date().toISOString();
+  const durationMs = Math.max(0, Date.parse(completedAt) - startedTimestamp);
+  const message = sanitizeMonitorError(error);
+  state.health.lastFailureAt = completedAt;
+  state.health.lastError = message;
+  state.health.consecutiveFailures = (state.health.consecutiveFailures ?? 0) + 1;
+  state.health.lastDurationMs = durationMs;
+  appendPollHistory(state, {
+    startedAt,
+    completedAt,
+    durationMs,
+    result: "failure",
+    usedPercent: null,
+    resetAt: null,
+    resetDetected: false,
+    publishStatus: "not-attempted",
+    error: message,
+  });
+  saveMonitorState(STATE_PATH, state);
+}
+
+function recordUntrackedFailure(error) {
+  if (flag("--raw")) return;
+  const now = Date.now();
+  const message = sanitizeMonitorError(error);
+  const state = loadMonitorState(STATE_PATH, now);
+  const lastFailure = Date.parse(state.health.lastFailureAt ?? "");
+  if (
+    state.health.lastError === message &&
+    Number.isFinite(lastFailure) &&
+    now - lastFailure < 5_000
+  ) {
+    return;
+  }
+  const startedAt = new Date(now).toISOString();
+  state.intervalSeconds = INTERVAL_SEC;
+  state.health.lastAttemptAt = startedAt;
+  recordPollFailure(state, startedAt, now, error);
 }
 
 async function main() {
   if (flag("--test-alert")) {
-    await alert("Test alert", "Monitor alert test — if you see this, notifications are working.");
+    const state = loadMonitorState(STATE_PATH);
+    await alert(
+      "Test alert",
+      "Monitor alert test — if you see this, notifications are working.",
+      state,
+    );
+    saveMonitorState(STATE_PATH, state);
     return;
   }
 
@@ -396,6 +520,7 @@ async function main() {
       try {
         await pollOnce(auth, opts);
       } catch (err) {
+        recordUntrackedFailure(err);
         console.error("Poll failed:", err.message);
       }
       await new Promise((r) => setTimeout(r, INTERVAL_SEC * 1000));
@@ -408,6 +533,7 @@ async function main() {
 try {
   await main();
 } catch (err) {
+  recordUntrackedFailure(err);
   console.error("Monitor error:", err.message);
   process.exit(2);
 }

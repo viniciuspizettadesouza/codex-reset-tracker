@@ -1080,6 +1080,450 @@ code {
   color: var(--brand);
 }
 
+/* ─── Local operations dashboard ─────────────────────────── */
+.localDashboard {
+  width: min(1180px, calc(100% - 48px));
+  min-height: 100vh;
+  margin-inline: auto;
+  padding: 36px 0 28px;
+}
+
+.localHeader,
+.localHeader > div,
+.localRefresh,
+.localHealthBanner,
+.localHealthBanner > div,
+.localCardHeading,
+.localLegend,
+.localFooter {
+  display: flex;
+  align-items: center;
+}
+
+.localHeader {
+  justify-content: space-between;
+  gap: 28px;
+  padding-bottom: 28px;
+}
+
+.localHeader > div:first-child {
+  gap: 14px;
+}
+
+.localHeader p,
+.localCardHeading p,
+.localHealthBanner p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.localHeader h1 {
+  margin-top: 1px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.localRefresh {
+  gap: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.localRefresh button,
+.localLoading button {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.localRefresh button:hover,
+.localLoading button:hover {
+  border-color: var(--border-brand-hover);
+}
+
+.localRequestError {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(212, 164, 62, 0.25);
+  border-radius: var(--radius-control);
+  background: var(--community-soft);
+  color: #efd08c;
+  font-size: 12px;
+}
+
+.localHealthBanner {
+  justify-content: space-between;
+  gap: 30px;
+  min-height: 112px;
+  padding: 24px 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+}
+
+.localHealthBanner > div {
+  gap: 16px;
+}
+
+.localHealthBanner > p {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  flex-wrap: wrap;
+  text-align: right;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+.localHealthBanner > p strong {
+  color: var(--text);
+}
+
+.localHealthBanner h2 {
+  margin: 2px 0 0;
+  font-size: 30px;
+}
+
+.localHealthDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.localHealthBanner.healthy {
+  border-color: rgba(67, 201, 139, 0.32);
+  background: linear-gradient(100deg, var(--official-soft), var(--panel) 42%);
+}
+.localHealthBanner.healthy .localHealthDot {
+  background: var(--official);
+  box-shadow: 0 0 0 6px rgba(67, 201, 139, 0.12);
+}
+.localHealthBanner.degraded {
+  border-color: rgba(212, 164, 62, 0.34);
+  background: linear-gradient(100deg, var(--community-soft), var(--panel) 42%);
+}
+.localHealthBanner.degraded .localHealthDot {
+  background: var(--community);
+  box-shadow: 0 0 0 6px rgba(212, 164, 62, 0.12);
+}
+.localHealthBanner.offline {
+  border-color: rgba(223, 116, 72, 0.38);
+  background: linear-gradient(100deg, var(--suspected-soft), var(--panel) 42%);
+}
+.localHealthBanner.offline .localHealthDot {
+  background: var(--suspected);
+  box-shadow: 0 0 0 6px rgba(223, 116, 72, 0.12);
+}
+
+.localOverview {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.localCard {
+  min-width: 0;
+  padding: 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+}
+
+.localCardHeading {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.localCardHeading h2 {
+  margin: 3px 0 0;
+  font-size: 22px;
+}
+
+.localCardHeading > span {
+  padding: 4px 9px;
+  border-radius: var(--radius-status);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.localCardHeading > span.synced {
+  color: var(--official);
+  background: var(--official-soft);
+}
+.localCardHeading > span.lagging,
+.localCardHeading > span.unavailable {
+  color: var(--community);
+  background: var(--community-soft);
+}
+.localCardHeading > span.ahead {
+  color: var(--brand-text);
+  background: var(--brand-soft);
+}
+
+.localQuotaBody {
+  display: grid;
+  grid-template-columns: 154px 1fr;
+  gap: 30px;
+  align-items: center;
+  margin-top: 28px;
+}
+
+.localQuotaBody dl,
+.localPublishFacts {
+  display: grid;
+  gap: 13px;
+  margin: 0;
+}
+
+.localQuotaBody dl div,
+.localPublishFacts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.localQuotaBody dt,
+.localPublishFacts dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.localQuotaBody dd,
+.localPublishFacts dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.localMetrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.localMetrics > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+
+.localMetrics span {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.localMetrics strong {
+  font-size: 21px;
+  line-height: 1.2;
+}
+
+.localPollStrip {
+  min-height: 23px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 20px;
+}
+
+.localPollStrip i {
+  flex: 1;
+  min-width: 3px;
+  max-width: 12px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.localPollStrip i.success,
+.localLegend span.success {
+  background: var(--official);
+}
+.localPollStrip i.partial,
+.localLegend span.partial {
+  background: var(--community);
+}
+.localPollStrip i.failure,
+.localLegend span.failure {
+  background: var(--suspected);
+}
+
+.localLegend {
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.localLegend span {
+  width: 6px;
+  height: 6px;
+  margin-left: 5px;
+  border-radius: 50%;
+}
+
+.localPublishCard {
+  grid-column: 1 / -1;
+}
+.localPublishFacts {
+  grid-template-columns: repeat(5, 1fr);
+  margin-top: 22px;
+}
+.localPublishFacts div {
+  display: grid;
+  gap: 5px;
+  border: 0;
+  padding: 0 18px;
+  border-right: 1px solid var(--border);
+}
+.localPublishFacts div:first-child {
+  padding-left: 0;
+}
+.localPublishFacts div:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+.localPublishFacts dd {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.localHistoryCard,
+.localErrorsCard {
+  margin-top: 16px;
+}
+
+.localChart {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  margin-top: 18px;
+}
+.localChart line {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+.localChart text {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.localChart path {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.localChartReset {
+  fill: var(--official);
+  stroke: var(--panel);
+  stroke-width: 3;
+}
+.localChartEmpty {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  margin-top: 18px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-control);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.localEmptyCopy {
+  color: var(--muted);
+  font-size: 12px;
+}
+.localQuotaCard > .localEmptyCopy {
+  margin-top: 28px;
+}
+
+.localErrorTable {
+  margin-top: 20px;
+}
+.localErrorTable > div {
+  display: grid;
+  grid-template-columns: 190px 72px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 13px 0;
+  border-top: 1px solid var(--border);
+}
+.localErrorTable time {
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.localErrorTable span {
+  width: fit-content;
+  padding: 2px 7px;
+  border-radius: var(--radius-status);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.localErrorTable span.partial {
+  color: var(--community);
+  background: var(--community-soft);
+}
+.localErrorTable span.failure {
+  color: var(--suspected);
+  background: var(--suspected-soft);
+}
+.localErrorTable p {
+  margin: 0;
+  color: var(--panel-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.localFooter {
+  justify-content: space-between;
+  padding: 24px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.localLoading {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.localLoading > div {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+.localLoading h1 {
+  font-size: 38px;
+}
+.localLoading p {
+  margin: 0;
+  color: var(--muted);
+}
+
 /* ─── Shared card hover ───────────────────────────────────── */
 .latestCard,
 .liveQuotaCard,
@@ -1208,5 +1652,47 @@ code {
   }
   .timelineDot {
     left: -36px;
+  }
+  .localDashboard {
+    width: min(100% - 24px, 1180px);
+    padding-top: 18px;
+  }
+  .localHeader,
+  .localHealthBanner,
+  .localFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .localRefresh {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .localHealthBanner > p {
+    text-align: left;
+  }
+  .localOverview {
+    grid-template-columns: 1fr;
+  }
+  .localQuotaBody {
+    grid-template-columns: 120px 1fr;
+    gap: 20px;
+  }
+  .localQuotaBody .quotaRing {
+    width: 120px;
+  }
+  .localPublishFacts {
+    grid-template-columns: 1fr 1fr;
+  }
+  .localPublishFacts div,
+  .localPublishFacts div:first-child,
+  .localPublishFacts div:last-child {
+    padding: 0;
+    border-right: 0;
+  }
+  .localErrorTable > div {
+    grid-template-columns: 1fr auto;
+  }
+  .localErrorTable p {
+    grid-column: 1 / -1;
   }
 }

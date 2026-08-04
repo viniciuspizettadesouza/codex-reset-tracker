@@ -118,3 +118,30 @@ export async function getLiveQuotaData(): Promise<LiveQuotaData> {
     return { status: "unavailable", snapshots: [], resetEvents: [] };
   }
 }
+
+export async function getLatestLiveQuotaSnapshot(): Promise<LiveQuotaSnapshot | null> {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) return null;
+
+  const sql = neon(databaseUrl);
+  const rows = await sql`
+    SELECT
+      observed_at,
+      used_percent,
+      reset_at,
+      window_seconds,
+      reset_detected
+    FROM quota_snapshots
+    ORDER BY observed_at DESC
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    observedAt: isoTimestamp(row.observed_at),
+    usedPercent: numberValue(row.used_percent),
+    resetAt: isoTimestamp(row.reset_at),
+    windowSeconds: numberValue(row.window_seconds),
+    resetDetected: row.reset_detected === true,
+  };
+}
