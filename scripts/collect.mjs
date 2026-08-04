@@ -19,6 +19,8 @@ import {
   isRelevantRedditTitle,
   clusterByWindow,
   buildEvent,
+  selectUnseenReports,
+  assertCollectorUpdate,
 } from "./lib/collect-utils.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -91,8 +93,10 @@ async function fetchRedditRss() {
         const isRelevant = isRelevantRedditTitle(item.title, sub, KEYWORDS);
         if (isRelevant) {
           const createdAt = new Date(item.pubDate).toISOString();
+          const sourceId = item.id || item.link || `${createdAt}:${item.title}`;
           posts.push({
-            id: item.link.split("/").findLast((s) => s.length > 0) ?? createdAt,
+            id: sourceId,
+            sourceId: `reddit:${sourceId}`,
             createdAt,
             title: item.title,
             url: item.link,
@@ -128,6 +132,7 @@ async function fetchOpenAIStatus() {
     for (const inc of relevant) {
       incidents.push({
         id: `openai-status-${inc.id}`,
+        sourceId: `openai-status:${inc.id}`,
         createdAt: inc.created_at,
         title: inc.name,
         url: inc.shortlink ?? "https://status.openai.com",
@@ -177,6 +182,7 @@ async function fetchXApi() {
         const username = usersById[t.author_id] ?? "unknown";
         return {
           id: `x-${t.id}`,
+          sourceId: `x:${t.id}`,
           createdAt: new Date(t.created_at).toISOString(),
           title: t.text,
           url: `https://x.com/${username}/status/${t.id}`,
@@ -211,10 +217,20 @@ try {
     process.exit(0);
   }
 
-  const clusters = clusterByWindow(allPosts);
+  const raw = JSON.parse(readFileSync(DATA_PATH, "utf-8"));
+  const { reports: unseenPosts, collectedReportIds } = selectUnseenReports(
+    allPosts,
+    raw.collectedReportIds,
+    raw.collectorStartedAt,
+  );
+  if (unseenPosts.length === 0) {
+    console.log("No unseen reports. JSON is unchanged.");
+    process.exit(0);
+  }
+
+  const clusters = clusterByWindow(unseenPosts);
   console.log(`Clustered into ${clusters.length} event(s).`);
 
-  const raw = JSON.parse(readFileSync(DATA_PATH, "utf-8"));
   let events = raw.events ?? [];
   let added = 0;
   let merged = 0;
@@ -239,8 +255,12 @@ try {
     process.exit(0);
   }
 
+  assertCollectorUpdate(raw.events ?? [], events, raw.collectedReportIds ?? [], collectedReportIds);
+
   const updated = {
+    ...raw,
     lastUpdatedAt: new Date().toISOString(),
+    collectedReportIds,
     events,
   };
 

@@ -3,20 +3,68 @@ import { deriveStatus } from "./events.mjs";
 // Posts within 6h of each other are considered the same event.
 export const CLUSTER_WINDOW_MS = 6 * 60 * 60 * 1000;
 
+export function reportKey(post) {
+  if (post.sourceId) return post.sourceId;
+  if (post.url) return post.url;
+  if (post.id) return `${post.sourcePlatform ?? "unknown"}:${post.id}`;
+  return `${post.createdAt ?? "unknown"}:${post.title ?? "untitled"}`;
+}
+
+/** Return only reports the collector has not persisted on an earlier run. */
+export function selectUnseenReports(posts, collectedReportIds = [], ignoreBefore = null) {
+  const seen = new Set(collectedReportIds);
+  const reports = [];
+  const cutoff = Date.parse(ignoreBefore ?? "");
+
+  for (const post of posts) {
+    const key = reportKey(post);
+    if (seen.has(key)) continue;
+    if (Number.isFinite(cutoff) && Date.parse(post.createdAt) <= cutoff) continue;
+    seen.add(key);
+    reports.push(post);
+  }
+
+  return { reports, collectedReportIds: [...seen] };
+}
+
+export function assertCollectorUpdate(beforeEvents, afterEvents, beforeIds, afterIds) {
+  const previous = new Set(beforeIds);
+  const next = new Set(afterIds);
+  if (next.size !== afterIds.length || [...previous].some((id) => !next.has(id))) {
+    throw new Error("Collector report IDs must be unique and append-only");
+  }
+
+  const totalReports = (events) =>
+    events.reduce((total, event) => total + (event.reportCount ?? 1), 0);
+  const addedIds = next.size - previous.size;
+  const addedReports = totalReports(afterEvents) - totalReports(beforeEvents);
+  if (addedIds <= 0 || addedReports !== addedIds) {
+    throw new Error(
+      `Refusing unsafe collector update: ${addedIds} new source IDs changed report counts by ${addedReports}`,
+    );
+  }
+}
+
 // Minimal RSS/Atom parser — extracts <item> or <entry> blocks without dependencies.
 export function parseRssItems(xml) {
   const items = [];
   const titleRe = /<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/;
-  const linkRe = /<(?:link|id)[^>]*>(?:<!\[CDATA\[)?(https?[^<\]]+)/;
+  const linkTextRe = /<link[^>]*>(?:<!\[CDATA\[)?(https?[^<\]]+)/;
+  const linkHrefRe = /<link[^>]*\shref=["'](https?[^"']+)["'][^>]*\/?\s*>/;
+  const idRe = /<id[^>]*>(?:<!\[CDATA\[)?([^<\]]+)/;
   const dateRe = /<(?:pubDate|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|published|updated)>/;
   const itemRe = /<(?:item|entry)>([\s\S]*?)<\/(?:item|entry)>/g;
   let m;
   while ((m = itemRe.exec(xml)) !== null) {
     const block = m[1];
     const title = (titleRe.exec(block) ?? [])[1]?.trim() ?? "";
-    const link = (linkRe.exec(block) ?? [])[1]?.trim() ?? "";
+    const id = (idRe.exec(block) ?? [])[1]?.trim() ?? "";
+    const link =
+      (linkHrefRe.exec(block) ?? [])[1]?.trim() ??
+      (linkTextRe.exec(block) ?? [])[1]?.trim() ??
+      (id.startsWith("http") ? id : "");
     const pubDate = (dateRe.exec(block) ?? [])[1]?.trim() ?? "";
-    if (title && pubDate) items.push({ title, link, pubDate });
+    if (title && pubDate) items.push({ id, title, link, pubDate });
   }
   return items;
 }

@@ -5,10 +5,79 @@ import {
   isRelevantRedditTitle,
   clusterByWindow,
   buildEvent,
+  reportKey,
+  selectUnseenReports,
+  assertCollectorUpdate,
   CLUSTER_WINDOW_MS,
 } from "../scripts/lib/collect-utils.mjs";
 
 const QUALIFIED_KEYWORDS = ["quota reset", "weekly limit reset"];
+
+test("reportKey prefers a stable source ID", () => {
+  assert.equal(
+    reportKey({ sourceId: "reddit:abc", url: "https://example.com/changed" }),
+    "reddit:abc",
+  );
+});
+
+test("selectUnseenReports makes repeated collector runs idempotent", () => {
+  const posts = [
+    { sourceId: "reddit:a", title: "First" },
+    { sourceId: "reddit:b", title: "Second" },
+    { sourceId: "reddit:a", title: "Duplicate in the same response" },
+  ];
+
+  const first = selectUnseenReports(posts, ["reddit:a"]);
+  assert.deepEqual(
+    first.reports.map((post) => post.sourceId),
+    ["reddit:b"],
+  );
+  assert.deepEqual(first.collectedReportIds, ["reddit:a", "reddit:b"]);
+
+  const second = selectUnseenReports(posts, first.collectedReportIds);
+  assert.deepEqual(second.reports, []);
+  assert.deepEqual(second.collectedReportIds, first.collectedReportIds);
+});
+
+test("selectUnseenReports ignores reports from before the restored-data cutoff", () => {
+  const result = selectUnseenReports(
+    [
+      { sourceId: "reddit:old", createdAt: "2026-08-04T12:00:00Z" },
+      { sourceId: "reddit:new", createdAt: "2026-08-04T14:00:01Z" },
+    ],
+    [],
+    "2026-08-04T14:00:00Z",
+  );
+
+  assert.deepEqual(
+    result.reports.map((post) => post.sourceId),
+    ["reddit:new"],
+  );
+});
+
+test("assertCollectorUpdate rejects repeated count inflation", () => {
+  assert.throws(
+    () =>
+      assertCollectorUpdate(
+        [{ reportCount: 2 }],
+        [{ reportCount: 3 }],
+        ["reddit:a", "reddit:b"],
+        ["reddit:a", "reddit:b"],
+      ),
+    /Refusing unsafe collector update/,
+  );
+});
+
+test("assertCollectorUpdate accepts one count per new source ID", () => {
+  assert.doesNotThrow(() =>
+    assertCollectorUpdate(
+      [{ reportCount: 2 }],
+      [{ reportCount: 4 }],
+      ["reddit:a"],
+      ["reddit:a", "reddit:b", "x:c"],
+    ),
+  );
+});
 
 // ── parseRssItems ────────────────────────────────────────────────────────────
 
@@ -40,7 +109,22 @@ test("parseRssItems parses an Atom <entry> with CDATA title", () => {
   const items = parseRssItems(xml);
   assert.equal(items.length, 1);
   assert.equal(items[0].title, "Codex limit reset early");
+  assert.equal(items[0].id, "https://reddit.com/r/ChatGPT/comments/xyz/");
+  assert.equal(items[0].link, "https://reddit.com/r/ChatGPT/comments/xyz/");
   assert.equal(items[0].pubDate, "2026-07-24T10:00:00+00:00");
+});
+
+test("parseRssItems reads Atom link href and stable non-URL IDs", () => {
+  const xml = `
+    <feed><entry>
+      <id>t3_abc123</id>
+      <title>Reset early</title>
+      <link href="https://www.reddit.com/r/codex/comments/abc123/reset_early/" />
+      <published>2026-08-04T14:00:00Z</published>
+    </entry></feed>`;
+  const [item] = parseRssItems(xml);
+  assert.equal(item.id, "t3_abc123");
+  assert.equal(item.link, "https://www.reddit.com/r/codex/comments/abc123/reset_early/");
 });
 
 test("parseRssItems skips items missing title or date", () => {
