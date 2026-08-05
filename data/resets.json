@@ -1,8 +1,12 @@
 {
-  "lastUpdatedAt": "2026-08-04T17:27:16.657Z",
+  "lastUpdatedAt": "2026-08-05T17:16:07.744Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
-    "reddit:t3_1vfb6e0"
+    "reddit:t3_1vfb6e0",
+    "reddit:t3_1vg58a3",
+    "reddit:t3_1vfzm3c",
+    "reddit:t3_1vfpiz0",
+    "reddit:t3_1vfmzos"
   ],
   "events": [
     {
@@ -52,15 +56,25 @@
       "scheduledAt": null,
       "daysEarly": null,
       "reportedAt": "2026-08-04T14:00:04.000Z",
-      "status": "suspected",
+      "status": "community",
       "title": "Quota reset reported by community",
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 1,
+      "reportCount": 5,
       "sourceName": "1 Reddit report",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vfb6e0/i_built_a_macos_menu_bar_app_to_track_codex/",
-      "description": "1 independent report across r/codex suggest a quota reset occurred around this time."
+      "description": "1 independent report across r/codex suggest a quota reset occurred around this time.",
+      "sources": [
+        {
+          "name": "1 Reddit report",
+          "url": "https://www.reddit.com/r/codex/comments/1vfb6e0/i_built_a_macos_menu_bar_app_to_track_codex/"
+        },
+        {
+          "name": "2 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vfmzos/do_codexs_frequent_quota_resets_actually_give_you/"
+        }
+      ]
     }
   ]
 }
