@@ -1,12 +1,21 @@
 {
-  "lastUpdatedAt": "2026-08-05T17:16:07.744Z",
+  "lastUpdatedAt": "2026-08-06T13:28:38.895Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
     "reddit:t3_1vg58a3",
     "reddit:t3_1vfzm3c",
     "reddit:t3_1vfpiz0",
-    "reddit:t3_1vfmzos"
+    "reddit:t3_1vfmzos",
+    "reddit:t3_1vh3w2i",
+    "reddit:t3_1vh174s",
+    "reddit:t3_1vgw85m",
+    "reddit:t3_1vgvgue",
+    "reddit:t3_1vgv3f7",
+    "reddit:t3_1vgme1k",
+    "reddit:t3_1vgl4y1",
+    "reddit:t3_1vgl219",
+    "reddit:t3_1vgl0u2"
   ],
   "events": [
     {
@@ -73,6 +82,32 @@
         {
           "name": "2 Reddit reports",
           "url": "https://www.reddit.com/r/codex/comments/1vfmzos/do_codexs_frequent_quota_resets_actually_give_you/"
+        }
+      ]
+    },
+    {
+      "id": "auto-2026-08-05-t3_1vg",
+      "occurredAt": "2026-08-05T21:44:15.000Z",
+      "scheduledAt": null,
+      "daysEarly": null,
+      "reportedAt": "2026-08-05T21:44:15.000Z",
+      "status": "community",
+      "title": "Quota reset reported by community",
+      "affectedPlans": [
+        "Unknown"
+      ],
+      "reportCount": 9,
+      "sourceName": "4 Reddit reports",
+      "sourceUrl": "https://www.reddit.com/r/codex/comments/1vgl0u2/we_need_usage_predictability_not_reset_generosity/",
+      "description": "4 independent reports across r/codex suggest a quota reset occurred around this time.",
+      "sources": [
+        {
+          "name": "4 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vgl0u2/we_need_usage_predictability_not_reset_generosity/"
+        },
+        {
+          "name": "1 Reddit report",
+          "url": "https://www.reddit.com/r/codex/comments/1vh3w2i/we_might_be_paying_for_our_resets_going_forward/"
         }
       ]
     }
