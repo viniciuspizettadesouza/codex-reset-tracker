@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-07T12:35:07.956Z",
+  "lastUpdatedAt": "2026-08-07T20:26:26.642Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -21,7 +21,8 @@
     "reddit:t3_1vhjy65",
     "reddit:t3_1vhjo79",
     "reddit:t3_1vh6q9t",
-    "reddit:t3_1vhvo7p"
+    "reddit:t3_1vhvo7p",
+    "reddit:t3_1vi0385"
   ],
   "events": [
     {
@@ -128,7 +129,7 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 5,
+      "reportCount": 6,
       "sourceName": "4 Reddit reports",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vhjo79/end_of_resets/",
       "description": "4 independent reports across r/codex suggest a quota reset occurred around this time.",
