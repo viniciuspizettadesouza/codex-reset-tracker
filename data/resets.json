@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-08T16:17:17.547Z",
+  "lastUpdatedAt": "2026-08-08T20:14:39.466Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -31,7 +31,8 @@
     "reddit:t3_1viyk8s",
     "reddit:t3_1vivnew",
     "reddit:t3_1vitvtq",
-    "reddit:t3_1viqz4s"
+    "reddit:t3_1viqz4s",
+    "reddit:t3_1vj1v2n"
   ],
   "events": [
     {
@@ -172,7 +173,7 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 4,
+      "reportCount": 5,
       "sourceName": "3 Reddit reports",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1viqz4s/no_reset_if_53_spark_is_at_100/",
       "description": "3 independent reports across r/codex suggest a quota reset occurred around this time.",
