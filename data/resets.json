@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-08T04:44:19.694Z",
+  "lastUpdatedAt": "2026-08-08T16:17:17.547Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -27,7 +27,11 @@
     "reddit:t3_1vierd1",
     "reddit:t3_1viccnm",
     "reddit:t3_1vic00o",
-    "reddit:t3_1vi3hm5"
+    "reddit:t3_1vi3hm5",
+    "reddit:t3_1viyk8s",
+    "reddit:t3_1vivnew",
+    "reddit:t3_1vitvtq",
+    "reddit:t3_1viqz4s"
   ],
   "events": [
     {
@@ -154,6 +158,32 @@
         {
           "name": "2 Reddit reports",
           "url": "https://www.reddit.com/r/codex/comments/1vierd1/resets_are_a_scam/"
+        }
+      ]
+    },
+    {
+      "id": "auto-2026-08-08-t3_1vi",
+      "occurredAt": "2026-08-08T08:54:59.000Z",
+      "scheduledAt": null,
+      "daysEarly": null,
+      "reportedAt": "2026-08-08T08:54:59.000Z",
+      "status": "community",
+      "title": "Quota reset reported by community",
+      "affectedPlans": [
+        "Unknown"
+      ],
+      "reportCount": 4,
+      "sourceName": "3 Reddit reports",
+      "sourceUrl": "https://www.reddit.com/r/codex/comments/1viqz4s/no_reset_if_53_spark_is_at_100/",
+      "description": "3 independent reports across r/codex suggest a quota reset occurred around this time.",
+      "sources": [
+        {
+          "name": "3 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1viqz4s/no_reset_if_53_spark_is_at_100/"
+        },
+        {
+          "name": "1 Reddit report",
+          "url": "https://www.reddit.com/r/codex/comments/1viyk8s/improving_chatgpt_workflow_between_codex_resets/"
         }
       ]
     }
