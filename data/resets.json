@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-07T20:26:26.642Z",
+  "lastUpdatedAt": "2026-08-08T04:44:19.694Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -22,7 +22,12 @@
     "reddit:t3_1vhjo79",
     "reddit:t3_1vh6q9t",
     "reddit:t3_1vhvo7p",
-    "reddit:t3_1vi0385"
+    "reddit:t3_1vi0385",
+    "reddit:t3_1vilpvh",
+    "reddit:t3_1vierd1",
+    "reddit:t3_1viccnm",
+    "reddit:t3_1vic00o",
+    "reddit:t3_1vi3hm5"
   ],
   "events": [
     {
@@ -129,7 +134,7 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 6,
+      "reportCount": 11,
       "sourceName": "4 Reddit reports",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vhjo79/end_of_resets/",
       "description": "4 independent reports across r/codex suggest a quota reset occurred around this time.",
@@ -141,6 +146,14 @@
         {
           "name": "1 Reddit report",
           "url": "https://www.reddit.com/r/codex/comments/1vhvo7p/weekly_limit_does_not_reset_upon_subscription/"
+        },
+        {
+          "name": "3 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vi3hm5/beg_for_codex_resets/"
+        },
+        {
+          "name": "2 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vierd1/resets_are_a_scam/"
         }
       ]
     }
