@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-08T20:14:39.466Z",
+  "lastUpdatedAt": "2026-08-09T00:43:14.373Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -32,7 +32,14 @@
     "reddit:t3_1vivnew",
     "reddit:t3_1vitvtq",
     "reddit:t3_1viqz4s",
-    "reddit:t3_1vj1v2n"
+    "reddit:t3_1vj1v2n",
+    "reddit:t3_1vj6mg7",
+    "reddit:t3_1vj6fk1",
+    "reddit:t3_1vj6eqa",
+    "reddit:t3_1vj6en5",
+    "reddit:t3_1vj6dm1",
+    "reddit:t3_1vj6a5p",
+    "reddit:t3_1vj673q"
   ],
   "events": [
     {
@@ -173,7 +180,7 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 5,
+      "reportCount": 12,
       "sourceName": "3 Reddit reports",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1viqz4s/no_reset_if_53_spark_is_at_100/",
       "description": "3 independent reports across r/codex suggest a quota reset occurred around this time.",
@@ -185,6 +192,10 @@
         {
           "name": "1 Reddit report",
           "url": "https://www.reddit.com/r/codex/comments/1viyk8s/improving_chatgpt_workflow_between_codex_resets/"
+        },
+        {
+          "name": "7 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vj673q/week_reset_this_morning/"
         }
       ]
     }
