@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-09T04:53:37.960Z",
+  "lastUpdatedAt": "2026-08-09T20:17:28.806Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -40,7 +40,10 @@
     "reddit:t3_1vj6dm1",
     "reddit:t3_1vj6a5p",
     "reddit:t3_1vj673q",
-    "reddit:t3_1vjg6t7"
+    "reddit:t3_1vjg6t7",
+    "reddit:t3_1vjojzf",
+    "reddit:t3_1vjlosb",
+    "reddit:t3_1vjlerl"
   ],
   "events": [
     {
@@ -199,6 +202,22 @@
           "url": "https://www.reddit.com/r/codex/comments/1vj673q/week_reset_this_morning/"
         }
       ]
+    },
+    {
+      "id": "auto-2026-08-09-t3_1vj",
+      "occurredAt": "2026-08-09T09:28:23.000Z",
+      "scheduledAt": null,
+      "daysEarly": null,
+      "reportedAt": "2026-08-09T09:28:23.000Z",
+      "status": "community",
+      "title": "Quota reset reported by community",
+      "affectedPlans": [
+        "Unknown"
+      ],
+      "reportCount": 3,
+      "sourceName": "3 Reddit reports",
+      "sourceUrl": "https://www.reddit.com/r/codex/comments/1vjlerl/monday_reset/",
+      "description": "3 independent reports across r/codex suggest a quota reset occurred around this time."
     }
   ]
 }
