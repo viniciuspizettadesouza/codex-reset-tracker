@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-10T05:13:25.027Z",
+  "lastUpdatedAt": "2026-08-10T12:38:47.710Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -45,7 +45,14 @@
     "reddit:t3_1vjlosb",
     "reddit:t3_1vjlerl",
     "reddit:t3_1vkb7og",
-    "reddit:t3_1vk83wq"
+    "reddit:t3_1vk83wq",
+    "reddit:t3_1vkj9mp",
+    "reddit:t3_1vkgnnp",
+    "reddit:t3_1vkglo2",
+    "reddit:t3_1vkfcnz",
+    "reddit:t3_1vkfacr",
+    "reddit:t3_1vkduhl",
+    "reddit:t3_1vkcom9"
   ],
   "events": [
     {
@@ -216,7 +223,7 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 5,
+      "reportCount": 11,
       "sourceName": "3 Reddit reports",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vjlerl/monday_reset/",
       "description": "3 independent reports across r/codex suggest a quota reset occurred around this time.",
@@ -228,8 +235,28 @@
         {
           "name": "2 Reddit reports",
           "url": "https://www.reddit.com/r/codex/comments/1vk83wq/so_are_we_getting_a_reset_on_monday_aug_10th_or_no/"
+        },
+        {
+          "name": "6 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vkcom9/openai_screwed_me_on_my_resets/"
         }
       ]
+    },
+    {
+      "id": "auto-2026-08-10-t3_1vk",
+      "occurredAt": "2026-08-10T12:20:13.000Z",
+      "scheduledAt": null,
+      "daysEarly": null,
+      "reportedAt": "2026-08-10T12:20:13.000Z",
+      "status": "suspected",
+      "title": "Quota reset reported by community",
+      "affectedPlans": [
+        "Unknown"
+      ],
+      "reportCount": 1,
+      "sourceName": "1 Reddit report",
+      "sourceUrl": "https://www.reddit.com/r/codex/comments/1vkj9mp/are_we_getting_the_monday_reset_or_not/",
+      "description": "1 independent report across r/codex suggest a quota reset occurred around this time."
     }
   ]
 }
