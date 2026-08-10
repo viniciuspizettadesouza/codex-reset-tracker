@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-09T20:17:28.806Z",
+  "lastUpdatedAt": "2026-08-10T05:13:25.027Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -43,7 +43,9 @@
     "reddit:t3_1vjg6t7",
     "reddit:t3_1vjojzf",
     "reddit:t3_1vjlosb",
-    "reddit:t3_1vjlerl"
+    "reddit:t3_1vjlerl",
+    "reddit:t3_1vkb7og",
+    "reddit:t3_1vk83wq"
   ],
   "events": [
     {
@@ -214,10 +216,20 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 3,
+      "reportCount": 5,
       "sourceName": "3 Reddit reports",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vjlerl/monday_reset/",
-      "description": "3 independent reports across r/codex suggest a quota reset occurred around this time."
+      "description": "3 independent reports across r/codex suggest a quota reset occurred around this time.",
+      "sources": [
+        {
+          "name": "3 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vjlerl/monday_reset/"
+        },
+        {
+          "name": "2 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vk83wq/so_are_we_getting_a_reset_on_monday_aug_10th_or_no/"
+        }
+      ]
     }
   ]
 }
