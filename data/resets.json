@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-11T08:41:47.296Z",
+  "lastUpdatedAt": "2026-08-11T16:43:20.518Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -57,7 +57,8 @@
     "reddit:t3_1vko9ss",
     "reddit:t3_1vl5q58",
     "reddit:t3_1vkzej3",
-    "reddit:t3_1vkv820"
+    "reddit:t3_1vkv820",
+    "reddit:t3_1vlllc2"
   ],
   "events": [
     {
@@ -272,6 +273,22 @@
           "url": "https://www.reddit.com/r/codex/comments/1vko9ss/resets_and_multiple_acounts/"
         }
       ]
+    },
+    {
+      "id": "auto-2026-08-11-t3_1vl",
+      "occurredAt": "2026-08-11T16:01:57.000Z",
+      "scheduledAt": null,
+      "daysEarly": null,
+      "reportedAt": "2026-08-11T16:01:57.000Z",
+      "status": "suspected",
+      "title": "Quota reset reported by community",
+      "affectedPlans": [
+        "Unknown"
+      ],
+      "reportCount": 1,
+      "sourceName": "1 Reddit report",
+      "sourceUrl": "https://www.reddit.com/r/codex/comments/1vlllc2/does_anyone_know_what_time_of_day_the_banked/",
+      "description": "1 independent report across r/codex suggest a quota reset occurred around this time."
     }
   ]
 }
