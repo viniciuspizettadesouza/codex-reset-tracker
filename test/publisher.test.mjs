@@ -83,6 +83,48 @@ test("buildMonitorPayload includes only sanitized refill metadata", () => {
   ]);
 });
 
+test("buildMonitorPayload records zero hours early for a late refill", () => {
+  const payload = buildMonitorPayload(
+    { ...weekly, usedPercent: 0 },
+    {
+      refilled: true,
+      expectedResetAt: "2026-07-24T10:00:00.000Z",
+      hoursEarly: null,
+      prevPercent: 100,
+    },
+    observedAt,
+  );
+
+  assert.equal(payload.resetEvent.hoursEarly, 0);
+});
+
+test("publishQuotaSnapshot repairs legacy queued reset metadata", async () => {
+  let postedPayload;
+  const payload = buildMonitorPayload(
+    { ...weekly, usedPercent: 0 },
+    {
+      refilled: true,
+      expectedResetAt: "2026-07-24T10:00:00.000Z",
+      prevPercent: 100,
+    },
+    observedAt,
+  );
+  payload.resetEvent.hoursEarly = null;
+
+  const result = await publishQuotaSnapshot({
+    url: "https://quota.example/api/monitor",
+    token: "private-token",
+    payload,
+    fetchImpl: async (_url, options) => {
+      postedPayload = JSON.parse(options.body);
+      return new Response(null, { status: 201 });
+    },
+  });
+
+  assert.equal(postedPayload.resetEvent.hoursEarly, 0);
+  assert.deepEqual(result, { status: "created" });
+});
+
 test("publishQuotaSnapshot stays disabled unless both settings exist", async () => {
   let called = false;
   const result = await publishQuotaSnapshot({

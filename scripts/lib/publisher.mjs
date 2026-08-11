@@ -6,6 +6,26 @@ function roundedPercent(value) {
   return Math.round(value * 100) / 100;
 }
 
+function normalizeResetHoursEarly(payload) {
+  const resetEvent = payload?.resetEvent;
+  if (!resetEvent) return payload;
+
+  const detectedTimestamp = Date.parse(resetEvent.detectedAt);
+  const expectedTimestamp = Date.parse(resetEvent.expectedResetAt ?? "");
+  const hoursEarly =
+    Number.isFinite(expectedTimestamp) && Number.isFinite(detectedTimestamp)
+      ? Math.max(0, (expectedTimestamp - detectedTimestamp) / 3_600_000)
+      : null;
+
+  return {
+    ...payload,
+    resetEvent: {
+      ...resetEvent,
+      hoursEarly,
+    },
+  };
+}
+
 export function formatQuota(usedPercent) {
   return `${roundedPercent(100 - usedPercent)}% remaining (${usedPercent}% used)`;
 }
@@ -53,7 +73,7 @@ export function buildMonitorPayload(weekly, reset, observedAt) {
     };
   }
 
-  return payload;
+  return normalizeResetHoursEarly(payload);
 }
 
 export async function publishQuotaSnapshot({
@@ -81,7 +101,9 @@ export async function publishQuotaSnapshot({
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    // Canonicalize queued payloads too, so snapshots created by an older
+    // monitor version cannot permanently block the upload queue.
+    body: JSON.stringify(normalizeResetHoursEarly(payload)),
     signal: AbortSignal.timeout(timeoutMs),
   });
 
