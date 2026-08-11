@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-11T16:43:20.518Z",
+  "lastUpdatedAt": "2026-08-11T20:31:27.528Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -58,7 +58,9 @@
     "reddit:t3_1vl5q58",
     "reddit:t3_1vkzej3",
     "reddit:t3_1vkv820",
-    "reddit:t3_1vlllc2"
+    "reddit:t3_1vlllc2",
+    "reddit:t3_1vlo1f4",
+    "reddit:t3_1vln098"
   ],
   "events": [
     {
@@ -280,15 +282,25 @@
       "scheduledAt": null,
       "daysEarly": null,
       "reportedAt": "2026-08-11T16:01:57.000Z",
-      "status": "suspected",
+      "status": "community",
       "title": "Quota reset reported by community",
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 1,
+      "reportCount": 3,
       "sourceName": "1 Reddit report",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vlllc2/does_anyone_know_what_time_of_day_the_banked/",
-      "description": "1 independent report across r/codex suggest a quota reset occurred around this time."
+      "description": "1 independent report across r/codex suggest a quota reset occurred around this time.",
+      "sources": [
+        {
+          "name": "1 Reddit report",
+          "url": "https://www.reddit.com/r/codex/comments/1vlllc2/does_anyone_know_what_time_of_day_the_banked/"
+        },
+        {
+          "name": "2 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vln098/eclipse_reset/"
+        }
+      ]
     }
   ]
 }
