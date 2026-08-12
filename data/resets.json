@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-12T08:57:46.376Z",
+  "lastUpdatedAt": "2026-08-12T16:43:17.016Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -62,7 +62,9 @@
     "reddit:t3_1vlo1f4",
     "reddit:t3_1vln098",
     "reddit:t3_1vm6es7",
-    "reddit:t3_1vlwokb"
+    "reddit:t3_1vlwokb",
+    "reddit:t3_1vmhp50",
+    "reddit:t3_1vm9kc7"
   ],
   "events": [
     {
@@ -289,7 +291,7 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 5,
+      "reportCount": 7,
       "sourceName": "1 Reddit report",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vlllc2/does_anyone_know_what_time_of_day_the_banked/",
       "description": "1 independent report across r/codex suggest a quota reset occurred around this time.",
