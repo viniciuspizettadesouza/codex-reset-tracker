@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-13T00:54:34.368Z",
+  "lastUpdatedAt": "2026-08-13T16:42:21.154Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -70,7 +70,14 @@
     "reddit:t3_1vmqvob",
     "reddit:t3_1vmo156",
     "reddit:t3_1vmmxsb",
-    "reddit:t3_1vmkzmp"
+    "reddit:t3_1vmkzmp",
+    "reddit:t3_1vn97l1",
+    "reddit:t3_1vn8j7t",
+    "reddit:t3_1vn81i0",
+    "reddit:t3_1vn6y4n",
+    "reddit:t3_1vn6ta2",
+    "reddit:t3_1vn46tq",
+    "reddit:t3_1vmzhu9"
   ],
   "events": [
     {
@@ -323,10 +330,24 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 6,
+      "reportCount": 13,
       "sourceName": "6 Reddit reports",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vmkzmp/banked_reset_expired_early/",
-      "description": "6 independent reports across r/codex suggest a quota reset occurred around this time."
+      "description": "6 independent reports across r/codex suggest a quota reset occurred around this time.",
+      "sources": [
+        {
+          "name": "6 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vmkzmp/banked_reset_expired_early/"
+        },
+        {
+          "name": "2 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vmzhu9/reset_has_landed/"
+        },
+        {
+          "name": "5 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vn6ta2/openai_is_gaming_the_resets_too_much_i_am/"
+        }
+      ]
     }
   ]
 }
