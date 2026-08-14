@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-14T05:22:42.760Z",
+  "lastUpdatedAt": "2026-08-14T12:35:16.242Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -81,7 +81,10 @@
     "reddit:t3_1vnlxg8",
     "reddit:t3_1vnqthl",
     "reddit:t3_1vnop1c",
-    "reddit:t3_1vnxbpd"
+    "reddit:t3_1vnxbpd",
+    "reddit:t3_1vo5q6s",
+    "reddit:t3_1vo57lv",
+    "reddit:t3_1vnze5r"
   ],
   "events": [
     {
@@ -364,7 +367,7 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 4,
+      "reportCount": 7,
       "sourceName": "1 Reddit report",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vnlxg8/why_is_openai_scamming_business_customers_they/",
       "description": "1 independent report across r/codex suggest a quota reset occurred around this time.",
@@ -376,6 +379,10 @@
         {
           "name": "2 Reddit reports",
           "url": "https://www.reddit.com/r/codex/comments/1vnop1c/if_i_upgrade_from_chatgpt_plus_to_pro_does_my/"
+        },
+        {
+          "name": "3 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vnze5r/new_feature_in_beta_test_8_to_reset/"
         }
       ]
     }
