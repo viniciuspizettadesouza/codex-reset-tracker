@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-14T00:53:35.147Z",
+  "lastUpdatedAt": "2026-08-14T05:22:42.760Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -80,7 +80,8 @@
     "reddit:t3_1vmzhu9",
     "reddit:t3_1vnlxg8",
     "reddit:t3_1vnqthl",
-    "reddit:t3_1vnop1c"
+    "reddit:t3_1vnop1c",
+    "reddit:t3_1vnxbpd"
   ],
   "events": [
     {
@@ -363,7 +364,7 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 3,
+      "reportCount": 4,
       "sourceName": "1 Reddit report",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1vnlxg8/why_is_openai_scamming_business_customers_they/",
       "description": "1 independent report across r/codex suggest a quota reset occurred around this time.",
