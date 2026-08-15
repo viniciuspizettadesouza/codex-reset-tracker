@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-14T20:19:31.353Z",
+  "lastUpdatedAt": "2026-08-15T00:30:32.718Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -86,7 +86,10 @@
     "reddit:t3_1vo57lv",
     "reddit:t3_1vnze5r",
     "reddit:t3_1voguwf",
-    "reddit:t3_1voa3wp"
+    "reddit:t3_1voa3wp",
+    "reddit:t3_1vond01",
+    "reddit:t3_1vok2ox",
+    "reddit:t3_1voiits"
   ],
   "events": [
     {
@@ -387,6 +390,22 @@
           "url": "https://www.reddit.com/r/codex/comments/1vnze5r/new_feature_in_beta_test_8_to_reset/"
         }
       ]
+    },
+    {
+      "id": "auto-2026-08-14-t3_1vo",
+      "occurredAt": "2026-08-14T20:26:19.000Z",
+      "scheduledAt": null,
+      "daysEarly": null,
+      "reportedAt": "2026-08-14T20:26:19.000Z",
+      "status": "community",
+      "title": "Quota reset reported by community",
+      "affectedPlans": [
+        "Unknown"
+      ],
+      "reportCount": 3,
+      "sourceName": "3 Reddit reports",
+      "sourceUrl": "https://www.reddit.com/r/codex/comments/1voiits/weekly_reset_timing_doesnt_start_until_you_log_in/",
+      "description": "3 independent reports across r/codex suggest a quota reset occurred around this time."
     }
   ]
 }
