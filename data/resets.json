@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-15T12:12:49.949Z",
+  "lastUpdatedAt": "2026-08-15T20:08:06.488Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -93,7 +93,12 @@
     "reddit:t3_1voxsi9",
     "reddit:t3_1vow2io",
     "reddit:t3_1vouic3",
-    "reddit:t3_1voqoen"
+    "reddit:t3_1voqoen",
+    "reddit:t3_1vpcle9",
+    "reddit:t3_1vpbo3l",
+    "reddit:t3_1vpb6ov",
+    "reddit:t3_1vp8iil",
+    "reddit:t3_1vp6zx6"
   ],
   "events": [
     {
@@ -406,7 +411,7 @@
       "affectedPlans": [
         "Unknown"
       ],
-      "reportCount": 7,
+      "reportCount": 12,
       "sourceName": "3 Reddit reports",
       "sourceUrl": "https://www.reddit.com/r/codex/comments/1voiits/weekly_reset_timing_doesnt_start_until_you_log_in/",
       "description": "3 independent reports across r/codex suggest a quota reset occurred around this time.",
@@ -418,6 +423,10 @@
         {
           "name": "1 Reddit report",
           "url": "https://www.reddit.com/r/codex/comments/1voxsi9/for_people_that_see_the_paid_reset_option_do_you/"
+        },
+        {
+          "name": "5 Reddit reports",
+          "url": "https://www.reddit.com/r/codex/comments/1vp6zx6/paid_resets/"
         }
       ]
     }
