@@ -1,5 +1,5 @@
 {
-  "lastUpdatedAt": "2026-08-15T20:08:06.488Z",
+  "lastUpdatedAt": "2026-08-16T00:31:18.314Z",
   "collectorStartedAt": "2026-08-04T13:52:31Z",
   "collectedReportIds": [
     "reddit:t3_1vfb6e0",
@@ -98,7 +98,9 @@
     "reddit:t3_1vpbo3l",
     "reddit:t3_1vpb6ov",
     "reddit:t3_1vp8iil",
-    "reddit:t3_1vp6zx6"
+    "reddit:t3_1vp6zx6",
+    "reddit:t3_1vpft5l",
+    "reddit:t3_1vpe77k"
   ],
   "events": [
     {
@@ -429,6 +431,22 @@
           "url": "https://www.reddit.com/r/codex/comments/1vp6zx6/paid_resets/"
         }
       ]
+    },
+    {
+      "id": "auto-2026-08-15-t3_1vp",
+      "occurredAt": "2026-08-15T21:09:16.000Z",
+      "scheduledAt": null,
+      "daysEarly": null,
+      "reportedAt": "2026-08-15T21:09:16.000Z",
+      "status": "suspected",
+      "title": "Quota reset reported by community",
+      "affectedPlans": [
+        "Unknown"
+      ],
+      "reportCount": 2,
+      "sourceName": "2 Reddit reports",
+      "sourceUrl": "https://www.reddit.com/r/codex/comments/1vpe77k/reset_incoming_aug_16th/",
+      "description": "2 independent reports across r/codex suggest a quota reset occurred around this time."
     }
   ]
 }
