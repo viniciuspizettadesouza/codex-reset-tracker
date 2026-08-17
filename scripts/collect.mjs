@@ -19,6 +19,8 @@ import {
   isRelevantRedditTitle,
   clusterByWindow,
   buildEvent,
+  isPublishableCluster,
+  reportKey,
   selectUnseenReports,
   assertCollectorUpdate,
 } from "./lib/collect-utils.mjs";
@@ -188,6 +190,10 @@ async function fetchXApi() {
           url: `https://x.com/${username}/status/${t.id}`,
           sourcePlatform: "x",
           xAccount: username,
+          isOfficial: X_ACCOUNTS.some(
+            (account) => account.toLowerCase() === username.toLowerCase(),
+          ),
+          sourceName: `@${username} on X`,
         };
       });
 
@@ -218,7 +224,7 @@ try {
   }
 
   const raw = JSON.parse(readFileSync(DATA_PATH, "utf-8"));
-  const { reports: unseenPosts, collectedReportIds } = selectUnseenReports(
+  const { reports: unseenPosts } = selectUnseenReports(
     allPosts,
     raw.collectedReportIds,
     raw.collectorStartedAt,
@@ -229,13 +235,27 @@ try {
   }
 
   const clusters = clusterByWindow(unseenPosts);
-  console.log(`Clustered into ${clusters.length} event(s).`);
+  const publishableClusters = clusters.filter(isPublishableCluster);
+  const deferredCount = clusters.length - publishableClusters.length;
+  console.log(
+    `Clustered into ${publishableClusters.length} publishable event(s); deferred ${deferredCount} uncorroborated cluster(s).`,
+  );
+
+  if (publishableClusters.length === 0) {
+    console.log("No corroborated or official event. JSON is unchanged.");
+    process.exit(0);
+  }
+
+  const collectedReportIds = [
+    ...(raw.collectedReportIds ?? []),
+    ...publishableClusters.flat().map(reportKey),
+  ];
 
   let events = raw.events ?? [];
   let added = 0;
   let merged = 0;
 
-  for (const cluster of clusters) {
+  for (const cluster of publishableClusters) {
     const candidate = buildEvent(cluster);
     const result = upsertEvent(events, candidate);
     events = result.events;

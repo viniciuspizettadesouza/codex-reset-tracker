@@ -35,9 +35,11 @@ authoritative signal is the personal monitor reading `/wham/usage` (see
 - **r/codex** — primary; early resets are often reported within minutes.
   Example: https://www.reddit.com/r/codex/comments/1rnpm9a/weekly_limits_just_got_reset_early_for_everyone/
 - **r/ChatGPT**, **r/OpenAI** — secondary.
-- All three are polled via RSS by `scripts/collect.mjs`. The r/codex query is
-  intentionally broad because short titles such as "Reset incoming" are common;
-  the general-subreddit queries remain Codex-qualified to limit noise. Note:
+- All three are polled via RSS by `scripts/collect.mjs`. Search discovery is
+  broad, but publication is deliberately strict: titles must describe an
+  observed refill, and at least three reports must cluster within six hours.
+  Questions, predictions, tools, and paid/savable resets are excluded. The
+  general-subreddit queries also remain Codex-qualified. Note:
   Reddit increasingly rate-limits/blocks datacenter IPs, so this source can go
   quiet — do not rely on it alone.
 

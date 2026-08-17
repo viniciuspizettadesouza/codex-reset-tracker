@@ -432,7 +432,7 @@ detection at 15 minutes.
 
 ## Operational verification record
 
-Completed on 2026-07-25:
+Completed through 2026-08-17:
 
 - Vercel production deployment returned the live dashboard.
 - Neon production variables were applied.
@@ -451,6 +451,9 @@ Completed on 2026-07-25:
   protections enabled.
 - A Telegram test alert reached the intended private chat.
 - The continuous monitor restarted with Telegram configured and remained active.
+- The autonomous community collector was hardened to require observational
+  wording and three reports within six hours; 11 legacy unverified automatic
+  events were removed while verified events were preserved.
 
 Still pending:
 

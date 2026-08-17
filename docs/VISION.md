@@ -153,9 +153,9 @@ The public tracker (this repo's website) has two related views:
 2. A community timeline where anonymized early-reset events and independent
    reports merge to raise confidence.
 
-The live view is the next implementation milestone. The community timeline
-already exists and can continue using `data/resets.json` until a later database
-migration.
+The live view and its sanitized ingest pipeline are implemented. The community
+timeline continues using `data/resets.json`; moving it into PostgreSQL remains
+an optional later migration.
 
 ## Known caveats
 

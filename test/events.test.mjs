@@ -120,3 +120,46 @@ test("an official source promotes status, title and headline source", () => {
   assert.equal(events[0].title, "OpenAI note");
   assert.equal(events[0].sourceName, "OpenAI Status");
 });
+
+test("collector merge refreshes community count, description, and individual sources", () => {
+  let events = [
+    {
+      ...base,
+      id: "auto-first",
+      occurredAt: "2026-08-15T00:00:00Z",
+      scheduledAt: null,
+      reportCount: 3,
+      sourceName: "3 Reddit reports",
+      sourceUrl: "u1",
+      sources: [{ name: "Observed reset one", url: "u1" }],
+      automated: true,
+    },
+  ];
+
+  ({ events } = upsertEvent(events, {
+    ...base,
+    id: "auto-second",
+    occurredAt: "2026-08-15T04:00:00Z",
+    scheduledAt: null,
+    reportCount: 3,
+    sourceName: "3 Reddit reports",
+    sourceUrl: "u2",
+    sources: [
+      { name: "Observed reset two", url: "u2" },
+      { name: "Observed reset three", url: "u3" },
+      { name: "Observed reset four", url: "u4" },
+    ],
+    automated: true,
+  }));
+
+  assert.equal(events[0].reportCount, 6);
+  assert.equal(events[0].sourceName, "6 community reports");
+  assert.equal(
+    events[0].description,
+    "6 independent community reports suggest a quota reset occurred around this time.",
+  );
+  assert.deepEqual(
+    events[0].sources.map((source) => source.url),
+    ["u1", "u2", "u3", "u4"],
+  );
+});

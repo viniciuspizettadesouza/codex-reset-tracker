@@ -2,6 +2,25 @@ import { deriveStatus } from "./events.mjs";
 
 // Posts within 6h of each other are considered the same event.
 export const CLUSTER_WINDOW_MS = 6 * 60 * 60 * 1000;
+export const MIN_AUTOMATED_COMMUNITY_REPORTS = 3;
+
+// The autonomous timeline favors precision over recall. A title must describe
+// an observed refill; questions, predictions, tools, and paid/savable reset
+// discussions stay out of the public event feed.
+const NON_OBSERVATION_PATTERNS = [
+  /\?/,
+  /\b(?:incoming|tomorrow|predict|prediction|when|what time|are we|will we|do we|does anyone)\b/i,
+  /\b(?:app|tool|track|tracker|paid|banked|savable|credit|option|upgrade|subscription)\b/i,
+  /\b(?:beg|scam|end of resets?|expired?)\b/i,
+];
+
+const OBSERVED_RESET_PATTERNS = [
+  /\b(?:quota|usage|weekly (?:quota|limit)|rate limits?|limits?)\s+(?:has |have |was |were )?(?:just )?(?:reset|refilled|restored|replenished|refreshed)\b/i,
+  /\b(?:got|has been|have been|just got)\s+reset\b/i,
+  /\breset\s+(?:has\s+)?(?:landed|happened|hit|arrived)\b/i,
+  /\breset\s+(?:early|just now|today|this (?:morning|afternoon|evening|week))\b/i,
+  /\b(?:quota|codex|limits?)\s+(?:is|are)\s+back\b/i,
+];
 
 export function reportKey(post) {
   if (post.sourceId) return post.sourceId;
@@ -71,9 +90,21 @@ export function parseRssItems(xml) {
 
 export function isRelevantRedditTitle(title, subreddit, qualifiedKeywords) {
   const normalizedTitle = title.toLowerCase();
+  if (NON_OBSERVATION_PATTERNS.some((pattern) => pattern.test(title))) return false;
+
+  const describesObservation = OBSERVED_RESET_PATTERNS.some((pattern) => pattern.test(title));
+  if (!describesObservation) return false;
+
   return (
-    qualifiedKeywords.some((keyword) => normalizedTitle.includes(keyword)) ||
-    (subreddit.toLowerCase() === "codex" && /\bresets?\b/i.test(title))
+    subreddit.toLowerCase() === "codex" ||
+    normalizedTitle.includes("codex") ||
+    qualifiedKeywords.some((keyword) => normalizedTitle.includes(keyword))
+  );
+}
+
+export function isPublishableCluster(cluster) {
+  return (
+    cluster.some((report) => report.isOfficial) || cluster.length >= MIN_AUTOMATED_COMMUNITY_REPORTS
   );
 }
 
@@ -95,7 +126,8 @@ export function clusterByWindow(posts) {
 export function buildEvent(cluster) {
   const sorted = [...cluster].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   const earliest = sorted[0];
-  const isOfficial = cluster.some((p) => p.isOfficial);
+  const officialReport = sorted.find((report) => report.isOfficial);
+  const isOfficial = Boolean(officialReport);
   const status = deriveStatus(cluster.length, isOfficial);
   const noun = cluster.length === 1 ? "report" : "reports";
   const subs = [...new Set(cluster.map((p) => p.subreddit).filter(Boolean))];
@@ -103,7 +135,7 @@ export function buildEvent(cluster) {
   const hasReddit = subs.length > 0;
 
   let sourceName;
-  if (isOfficial) sourceName = "OpenAI Status";
+  if (isOfficial) sourceName = officialReport.sourceName ?? "OpenAI Status";
   else if (hasX && !hasReddit) sourceName = `${cluster.length} X (Twitter) ${noun}`;
   else if (hasX) sourceName = `${cluster.length} ${noun} (Reddit + X)`;
   else sourceName = `${cluster.length} Reddit ${noun}`;
@@ -113,7 +145,7 @@ export function buildEvent(cluster) {
     ...(hasX ? ["X (Twitter)"] : []),
   ];
   const description = isOfficial
-    ? earliest.title
+    ? officialReport.title
     : `${cluster.length} independent ${noun} across ${parts.join(" and ")} suggest a quota reset occurred around this time.`;
 
   return {
@@ -123,11 +155,15 @@ export function buildEvent(cluster) {
     daysEarly: null,
     reportedAt: earliest.createdAt,
     status,
-    title: isOfficial ? earliest.title : "Quota reset reported by community",
+    title: isOfficial ? officialReport.title : "Quota reset reported by community",
     affectedPlans: ["Unknown"],
     reportCount: cluster.length,
     sourceName,
-    sourceUrl: isOfficial ? earliest.url : cluster[0].url,
+    sourceUrl: isOfficial ? officialReport.url : cluster[0].url,
+    sources: sorted
+      .filter((report) => report.url)
+      .map((report) => ({ name: report.title, url: report.url })),
     description,
+    automated: true,
   };
 }

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   parseRssItems,
   isRelevantRedditTitle,
+  isPublishableCluster,
   clusterByWindow,
   buildEvent,
   reportKey,
@@ -148,19 +149,36 @@ test("parseRssItems skips items missing title or date", () => {
   assert.equal(items[0].title, "Valid item");
 });
 
-test("isRelevantRedditTitle accepts short reset titles within r/codex", () => {
+test("isRelevantRedditTitle accepts titles that describe an observed reset", () => {
   assert.equal(
-    isRelevantRedditTitle("Hey Babe, how about that reset", "codex", QUALIFIED_KEYWORDS),
+    isRelevantRedditTitle("Weekly limit just reset this morning", "codex", QUALIFIED_KEYWORDS),
     true,
   );
-  assert.equal(isRelevantRedditTitle("Reset incoming.", "codex", QUALIFIED_KEYWORDS), true);
+  assert.equal(isRelevantRedditTitle("Reset has landed", "codex", QUALIFIED_KEYWORDS), true);
+});
+
+test("isRelevantRedditTitle rejects questions, predictions, tools, and reset credits", () => {
+  const titles = [
+    "Reset incoming.",
+    "Are we getting a reset on Monday?",
+    "I built an app to track Codex resets",
+    "Does the paid reset option expire?",
+    "Banked reset expired early",
+  ];
+  for (const title of titles) {
+    assert.equal(isRelevantRedditTitle(title, "codex", QUALIFIED_KEYWORDS), false, title);
+  }
 });
 
 test("isRelevantRedditTitle keeps general subreddits Codex-qualified", () => {
   assert.equal(isRelevantRedditTitle("Reset incoming.", "ChatGPT", QUALIFIED_KEYWORDS), false);
   assert.equal(
-    isRelevantRedditTitle("Codex weekly limit reset", "ChatGPT", QUALIFIED_KEYWORDS),
+    isRelevantRedditTitle("Codex weekly limit just reset", "ChatGPT", QUALIFIED_KEYWORDS),
     true,
+  );
+  assert.equal(
+    isRelevantRedditTitle("Weekly limit just reset", "ChatGPT", QUALIFIED_KEYWORDS),
+    false,
   );
 });
 
@@ -221,6 +239,13 @@ test("clusterByWindow uses window edge: exactly CLUSTER_WINDOW_MS apart stays se
   assert.equal(clusters.length, 2);
 });
 
+test("isPublishableCluster requires corroboration unless a source is official", () => {
+  assert.equal(isPublishableCluster([post("a", T0)]), false);
+  assert.equal(isPublishableCluster([post("a", T0), post("b", T1H)]), false);
+  assert.equal(isPublishableCluster([post("a", T0), post("b", T1H), post("c", T1H)]), true);
+  assert.equal(isPublishableCluster([{ ...post("official", T0), isOfficial: true }]), true);
+});
+
 // ── buildEvent ───────────────────────────────────────────────────────────────
 
 function redditPost(id, isoDate, subreddit = "codex") {
@@ -241,6 +266,8 @@ test("buildEvent with a single Reddit post produces a suspected event", () => {
   assert.equal(ev.occurredAt, T0);
   assert.equal(ev.affectedPlans[0], "Unknown");
   assert.equal(ev.scheduledAt, null);
+  assert.equal(ev.automated, true);
+  assert.deepEqual(ev.sources, [{ name: "Post abc", url: "https://reddit.com/abc" }]);
 });
 
 test("buildEvent with 3 Reddit posts produces a community event", () => {
@@ -263,6 +290,22 @@ test("buildEvent with an official post produces an official event", () => {
   assert.equal(ev.status, "official");
   assert.equal(ev.sourceName, "OpenAI Status");
   assert.equal(ev.title, "Codex quota reset");
+});
+
+test("buildEvent uses the official report as headline even when a community post is earlier", () => {
+  const official = {
+    id: "x-123",
+    createdAt: T1H,
+    title: "Codex limits have been reset",
+    url: "https://x.com/thsottiaux/status/123",
+    sourceName: "@thsottiaux on X",
+    isOfficial: true,
+  };
+  const ev = buildEvent([redditPost("earlier", T0), official]);
+  assert.equal(ev.occurredAt, T0);
+  assert.equal(ev.title, official.title);
+  assert.equal(ev.sourceName, official.sourceName);
+  assert.equal(ev.sourceUrl, official.url);
 });
 
 test("buildEvent with Reddit + X posts reflects mixed source in sourceName", () => {

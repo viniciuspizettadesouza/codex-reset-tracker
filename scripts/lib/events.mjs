@@ -61,13 +61,28 @@ function unionPlans(a = [], b = []) {
 function mergeSources(existing, candidate) {
   const sources = Array.isArray(existing.sources) ? [...existing.sources] : [];
   // Seed with the primary source of the existing event if not already tracked.
-  if (existing.sourceName && !sources.some((s) => s.name === existing.sourceName)) {
+  if (
+    existing.sourceName &&
+    !sources.some(
+      (source) =>
+        (existing.sourceUrl && source.url === existing.sourceUrl) ||
+        (!existing.sourceUrl && source.name === existing.sourceName),
+    )
+  ) {
     sources.unshift({ name: existing.sourceName, url: existing.sourceUrl });
   }
-  const url = candidate.sourceUrl;
-  const name = candidate.sourceName;
-  const already = sources.some((s) => (url && s.url === url) || s.name === name);
-  if (!already && name) sources.push({ name, url });
+  const candidates = Array.isArray(candidate.sources)
+    ? candidate.sources
+    : [{ name: candidate.sourceName, url: candidate.sourceUrl }];
+  for (const source of candidates) {
+    if (!source?.name) continue;
+    const already = sources.some(
+      (existingSource) =>
+        (source.url && existingSource.url === source.url) ||
+        (!source.url && existingSource.name === source.name),
+    );
+    if (!already) sources.push(source);
+  }
   return sources;
 }
 
@@ -90,6 +105,12 @@ function mergeInto(existing, candidate) {
 
   // An official source takes over the headline; otherwise keep the earliest one.
   const headline = candidate.status === "official" ? candidate : existing;
+  const automated =
+    existing.automated === true ||
+    candidate.automated === true ||
+    existing.id?.startsWith("auto-") ||
+    candidate.id?.startsWith("auto-");
+  const communityNoun = reportCount === 1 ? "report" : "reports";
 
   return {
     ...existing,
@@ -100,9 +121,17 @@ function mergeInto(existing, candidate) {
     title: isOfficial ? headline.title : existing.title,
     affectedPlans: unionPlans(existing.affectedPlans, candidate.affectedPlans),
     reportCount,
-    sourceName: headline.sourceName ?? existing.sourceName,
+    sourceName:
+      !isOfficial && automated
+        ? `${reportCount} community ${communityNoun}`
+        : (headline.sourceName ?? existing.sourceName),
     sourceUrl: headline.sourceUrl ?? existing.sourceUrl,
     sources,
+    description:
+      !isOfficial && automated
+        ? `${reportCount} independent community ${communityNoun} suggest a quota reset occurred around this time.`
+        : headline.description,
+    automated,
   };
 }
 

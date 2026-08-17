@@ -327,8 +327,12 @@ rotation, restart, and troubleshooting procedures are documented in
 
 `scripts/collect.mjs` runs every 4 hours via `.github/workflows/collect.yml`,
 polling Reddit (r/codex, r/ChatGPT, r/OpenAI), OpenAI Status, and optionally
-the X API. When it finds matching posts it clusters them by time window, builds
-events, and commits any changes to `data/resets.json` automatically.
+the X API. The collector favors precision: it rejects questions, predictions,
+tools, and paid/savable-reset discussions, then requires at least three
+observational community reports within six hours before publishing an event.
+A single OpenAI Status incident or announcement from a configured trusted X
+account can be published as official. Uncorroborated community matches remain
+unpublished and are reconsidered while they remain in the source feed.
 
 ### Zero-cost X monitoring
 
@@ -358,30 +362,18 @@ The next scheduled run (or a manual **Run workflow** dispatch) will pick it up.
 No code changes are needed — the workflow already passes the secret to the
 collector, and the collector skips X silently when the token is absent.
 
-## Update the timeline
+## Update the timeline manually
 
 Edit `data/resets.json`, add a new event object, commit, and push. Events are sorted automatically by `occurredAt`.
 
-Before publishing, replace the demonstration entries with verified information and exact source URLs.
+Use verified information and exact source URLs. Automated events must meet the
+same evidence standard described above.
 
-## Deploy with GitHub + Vercel
+## Production deployment
 
-1. Create an empty GitHub repository.
-2. In this project folder, run:
-
-```bash
-git init
-git add .
-git commit -m "feat: create Codex reset tracker MVP"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/codex-reset-tracker.git
-git push -u origin main
-```
-
-3. Sign in to Vercel and select **Add New > Project**.
-4. Import the GitHub repository.
-5. Vercel should detect Next.js automatically. Keep the default settings and select **Deploy**.
-6. Every later push to `main` will deploy a new production version automatically.
+The repository is connected to Vercel and pushes to `main` deploy the production
+site automatically. Keep `DATABASE_URL`, `MONITOR_INGEST_TOKEN`, and report
+submission credentials in the hosting environment; never commit them.
 
 ## Deploy with Vercel CLI
 
